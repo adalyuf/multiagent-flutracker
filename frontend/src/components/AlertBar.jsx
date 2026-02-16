@@ -1,0 +1,54 @@
+import React from 'react'
+
+const styles = {
+  bar: {
+    display: 'flex',
+    gap: '8px',
+    padding: '8px 24px',
+    background: 'rgba(239, 68, 68, 0.1)',
+    borderBottom: '1px solid rgba(239, 68, 68, 0.3)',
+    overflowX: 'auto',
+    minHeight: 40,
+    alignItems: 'center',
+  },
+  chip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 12px',
+    background: 'rgba(239, 68, 68, 0.15)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+    borderRadius: '16px',
+    fontSize: '0.8rem',
+    whiteSpace: 'nowrap',
+    color: '#fca5a5',
+  },
+  dot: (severity) => ({
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: severity === 'high' ? '#ef4444' : '#f59e0b',
+  }),
+  empty: { fontSize: '0.8rem', color: '#666' },
+}
+
+export default function AlertBar({ anomalies }) {
+  if (!anomalies || anomalies.length === 0) {
+    return (
+      <div style={styles.bar}>
+        <span style={styles.empty}>No active anomalies</span>
+      </div>
+    )
+  }
+
+  return (
+    <div style={styles.bar}>
+      {anomalies.map((a, i) => (
+        <div key={a.id || i} style={styles.chip}>
+          <span style={styles.dot(a.severity)} />
+          {a.message}
+        </div>
+      ))}
+    </div>
+  )
+}

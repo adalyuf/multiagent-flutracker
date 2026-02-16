@@ -1,0 +1,138 @@
+from datetime import date, timedelta
+from fastapi import APIRouter, Query
+from sqlalchemy import select, func, desc
+from app.database import async_session
+from app.models import GenomicSequence
+from app.schemas import GenomicTrendPoint, GenomicSummary, GenomicCountryRow
+
+router = APIRouter()
+
+
+@router.get("/trends", response_model=list[GenomicTrendPoint])
+async def genomic_trends(
+    years: int = Query(1, description="Years of data"),
+    country: str = Query("", description="Country filter"),
+    top_n: int = Query(6, description="Top N clades"),
+):
+    async with async_session() as session:
+        cutoff = date.today() - timedelta(days=years * 365)
+
+        # Get top clades
+        top_q = (
+            select(
+                GenomicSequence.clade,
+                func.sum(GenomicSequence.count).label("total"),
+            )
+            .where(GenomicSequence.collection_date >= cutoff)
+            .group_by(GenomicSequence.clade)
+            .order_by(desc("total"))
+            .limit(top_n)
+        )
+        if country:
+            top_q = top_q.where(GenomicSequence.country_code == country)
+
+        top_result = await session.execute(top_q)
+        top_clades = [r.clade for r in top_result]
+
+        if not top_clades:
+            return []
+
+        # Monthly trends for top clades
+        q = (
+            select(
+                func.date_trunc("month", GenomicSequence.collection_date).label("month"),
+                GenomicSequence.clade,
+                func.sum(GenomicSequence.count).label("total"),
+            )
+            .where(
+                GenomicSequence.collection_date >= cutoff,
+                GenomicSequence.clade.in_(top_clades),
+            )
+            .group_by("month", GenomicSequence.clade)
+            .order_by("month")
+        )
+        if country:
+            q = q.where(GenomicSequence.country_code == country)
+
+        result = await session.execute(q)
+        return [
+            GenomicTrendPoint(
+                date=r.month.strftime("%Y-%m-%d") if r.month else "",
+                clade=r.clade,
+                count=r.total,
+            )
+            for r in result
+        ]
+
+
+@router.get("/summary", response_model=GenomicSummary)
+async def genomic_summary():
+    async with async_session() as session:
+        total_r = await session.execute(select(func.sum(GenomicSequence.count)))
+        total = total_r.scalar() or 0
+
+        countries_r = await session.execute(
+            select(func.count(func.distinct(GenomicSequence.country_code)))
+        )
+        countries = countries_r.scalar() or 0
+
+        clades_r = await session.execute(
+            select(func.count(func.distinct(GenomicSequence.clade)))
+        )
+        clades = clades_r.scalar() or 0
+
+        dom_r = await session.execute(
+            select(GenomicSequence.clade, func.sum(GenomicSequence.count).label("total"))
+            .group_by(GenomicSequence.clade)
+            .order_by(desc("total"))
+            .limit(1)
+        )
+        dom = dom_r.first()
+        dominant = dom.clade if dom else ""
+
+        return GenomicSummary(
+            total_sequences=total,
+            countries=countries,
+            unique_clades=clades,
+            dominant_clade=dominant,
+        )
+
+
+@router.get("/countries", response_model=list[GenomicCountryRow])
+async def genomic_countries():
+    async with async_session() as session:
+        q = (
+            select(
+                GenomicSequence.country_code,
+                func.sum(GenomicSequence.count).label("total"),
+            )
+            .group_by(GenomicSequence.country_code)
+            .order_by(desc("total"))
+            .limit(20)
+        )
+        result = await session.execute(q)
+        rows = list(result)
+
+        # Get top clade per country
+        country_clades = {}
+        for r in rows:
+            clade_q = (
+                select(GenomicSequence.clade, func.sum(GenomicSequence.count).label("total"))
+                .where(GenomicSequence.country_code == r.country_code)
+                .group_by(GenomicSequence.clade)
+                .order_by(desc("total"))
+                .limit(1)
+            )
+            clade_r = await session.execute(clade_q)
+            top = clade_r.first()
+            if top:
+                country_clades[r.country_code] = top.clade
+
+        return [
+            GenomicCountryRow(
+                country_code=r.country_code,
+                total_sequences=r.total,
+                top_clade=country_clades.get(r.country_code, ""),
+            )
+            for r in rows
+        ]
