@@ -184,7 +184,6 @@ async def cases_countries(
             .where(FluCase.time >= cutoff)
             .group_by(FluCase.country_code)
             .order_by(desc("total"))
-            .limit(50)
         )
         result = await session.execute(q)
         current_data = {r.country_code: r.total for r in result}
@@ -263,4 +262,4 @@ async def cases_countries(
             severity=round(severity, 3),
         ))
 
-    return rows
+    return rows[:50]
