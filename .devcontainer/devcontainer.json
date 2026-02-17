@@ -35,14 +35,15 @@
     "source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
     "source=claude-code-ghconfig-${devcontainerId},target=/home/node/.config/gh,type=volume",
-    "source=claude-code-codexconfig-${devcontainerId},target=/home/node/.codex,type=volume"
+    "source=claude-code-codexconfig-${devcontainerId},target=/home/node/.codex,type=volume",
+    "source=claude-code-railwayconfig-${devcontainerId},target=/home/node/.railway,type=volume"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "POWERLEVEL9K_DISABLE_GITSTATUS": "true"
   },
-  "postCreateCommand": "sudo chown -R node:node /home/node/.config /home/node/.claude /home/node/.codex",
+  "postCreateCommand": "sudo chown -R node:node /home/node/.config /home/node/.claude /home/node/.codex /home/node/.railway",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace"
 }

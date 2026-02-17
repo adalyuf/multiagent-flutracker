@@ -41,8 +41,8 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
 ENV DEVCONTAINER=true
 
 # Create workspace and config directories and set permissions
-RUN mkdir -p /workspace /home/node/.claude /home/node/.config/gh /home/node/.codex && \
-  chown -R node:node /workspace /home/node/.claude /home/node/.config /home/node/.codex
+RUN mkdir -p /workspace /home/node/.claude /home/node/.config/gh /home/node/.codex /home/node/.railway && \
+  chown -R node:node /workspace /home/node/.claude /home/node/.config /home/node/.codex /home/node/.railway
 
 # Allow node user passwordless sudo (needed for postCreateCommand to fix volume mount ownership)
 RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/node && \
@@ -84,3 +84,4 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 RUN npm i -g @openai/codex
 RUN npm install -g cline
+RUN npm install -g @railway/cli
