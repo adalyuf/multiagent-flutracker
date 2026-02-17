@@ -85,8 +85,9 @@ The main `/workspace` checkout always stays on `main`.
 
 11. Clean up the worktree.
 
-- Remove the local worktree now that changes are pushed:
+- Return to the parent directory, then remove the worktree:
   ```
+  cd /workspace
   git -C /workspace worktree remove /workspace/.worktrees/<branch>
   ```
 
