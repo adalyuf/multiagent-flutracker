@@ -9,6 +9,10 @@ description: Continuous work loop that processes all available work in priority 
 
 Execute a continuous loop that processes all available GitHub work in priority order until nothing remains.
 
+This skill never switches branches itself. All branch work is done by the sub-skills
+(`build-feature`, `fix-pr`) via isolated git worktrees under `/workspace/.worktrees/`.
+The main `/workspace` checkout stays on `main` throughout.
+
 ## Workflow
 
 Run these steps in order. After each step, proceed to the next regardless of whether work was found.

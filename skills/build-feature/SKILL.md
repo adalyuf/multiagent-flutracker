@@ -1,6 +1,6 @@
 ---
 name: build-feature
-description: "Execute the GitHub workflow for assigned issues: find open issues with label assigned:codex, choose one actionable issue, create a branch, implement and verify a fix, open a pull request, and set the needs-review label. Use when asked to take an assigned issue through implementation and PR handoff with gh CLI."
+description: "Execute the GitHub workflow for assigned issues: find open issues with label assigned:codex, choose one actionable issue, create a task worktree + branch, implement and verify a fix, open a pull request, and set the needs-review label. Use when asked to take an assigned issue through implementation and PR handoff with gh CLI."
 ---
 
 # GitHub Assigned Issue PR
@@ -12,9 +12,15 @@ Prioritize correctness, minimal diffs, and explicit verification.
 
 ## Preconditions
 
-- Confirm repository remotes and branch status before editing.
+- Confirm repository remotes and worktree status before editing.
 - Confirm `gh auth status` succeeds.
 - Leave unrelated local changes untouched.
+
+## Worktree Conventions
+
+- Use a dedicated worktree per issue so multiple agents can run concurrently.
+- Recommended path: `../worktrees/<branch>`.
+- Do all issue edits, commits, and pushes from that issue worktree, not the shared root worktree.
 
 ## Workflow
 
@@ -29,10 +35,13 @@ Prioritize correctness, minimal diffs, and explicit verification.
 - Read issue details with `gh issue view <number>`.
 - Add the `assigned:codex` label if missing: `gh issue edit <number> --add-label assigned:codex`.
 
-3. Create branch.
+3. Create task worktree and branch.
 
 - Use `fix/issue-<number>-<short-slug>`.
-- Create with `git switch -c <branch>`.
+- Create from `origin/main` with:
+  - `git fetch origin`
+  - `git worktree add -b <branch> ../worktrees/<branch> origin/main`
+- Run all following commands from `../worktrees/<branch>`.
 
 4. Implement fix.
 
@@ -63,6 +72,8 @@ Prioritize correctness, minimal diffs, and explicit verification.
 9. Continue queue processing.
 
 - After finishing the PR handoff, call `build-feature` again to pick up the next `assigned:codex` issue.
+- Optionally remove the issue worktree after handoff if clean:
+  - `git worktree remove ../worktrees/<branch>`.
 
 ## PR Body Template
 
@@ -86,4 +97,5 @@ Closes #<issue-number>
 
 - Never include unrelated file changes in commits.
 - Never remove or revert user changes you did not make.
+- Never use `git switch` in the shared root worktree for task development.
 - If tooling fails (for example, old `gh` behavior), use `gh api` fallback and verify resulting PR/labels explicitly.

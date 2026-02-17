@@ -14,7 +14,8 @@ locate the associated PR, perform a code review, and either approve
 ## Preconditions
 
 - Confirm `gh auth status` succeeds.
-- Confirm repository remotes and branch status before proceeding.
+- Confirm repository remotes and worktree status before proceeding.
+- Avoid branch switching in the shared root worktree.
 
 ## Workflow
 
@@ -40,6 +41,10 @@ locate the associated PR, perform a code review, and either approve
 - Read the PR details: `gh pr view <number>`.
 - Read the full diff: `gh pr diff <number>`.
 - Check CI status: `gh pr checks <number>`.
+- If local execution is needed, use a temporary review worktree instead of switching branches:
+  - `git fetch origin <headRefName>`
+  - `git worktree add ../worktrees/review-pr-<number> origin/<headRefName>`
+  - Run local checks there, then remove it: `git worktree remove ../worktrees/review-pr-<number>`.
 - Review the code changes for:
   - **Correctness**: Does the change actually fix the issue?
   - **Tests**: Are there appropriate tests for the change?
@@ -87,3 +92,4 @@ Use this structure in PR comments:
 - Check that CI passes before approving and merging.
 - If CI is failing, include that in the review as a reason for requesting changes. Do not merge.
 - Review the full diff, not just a summary.
+- Prefer temporary worktrees for any local PR validation.

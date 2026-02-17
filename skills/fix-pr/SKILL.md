@@ -14,7 +14,8 @@ re-label the issue for another review cycle.
 ## Preconditions
 
 - Confirm `gh auth status` succeeds.
-- Confirm working tree is clean (`git status`). Stash or warn if dirty.
+- Confirm the shared root worktree is clean (`git status`). Stash or warn if dirty.
+- Use a dedicated worktree for the PR branch being fixed.
 
 ## Workflow
 
@@ -43,7 +44,11 @@ re-label the issue for another review cycle.
 
 5. Understand the current code.
 
-- Check out the PR branch: `git fetch origin <branch> && git switch <branch>`.
+- Create a dedicated worktree for the PR branch:
+  - `git fetch origin <branch>`
+  - If local branch exists: `git worktree add ../worktrees/<branch> <branch>`
+  - Else: `git worktree add -b <branch> ../worktrees/<branch> origin/<branch>`
+- Run all fix commands from `../worktrees/<branch>`.
 - Read each file mentioned in the review feedback to understand current state.
 - Read the full PR diff to understand what was already changed: `gh pr diff <number>`.
 
@@ -76,7 +81,8 @@ re-label the issue for another review cycle.
 
 11. Return to previous branch.
 
-- Switch back to the branch you were on before: `git switch -`.
+- Return to the original directory and remove the temporary worktree when clean:
+  - `git worktree remove ../worktrees/<branch>`.
 
 ## PR Comment Template
 
@@ -100,6 +106,7 @@ Ready for re-review.
 - Never force-push — only regular push to the PR branch.
 - Only change files relevant to the review feedback.
 - Do not modify unrelated code.
+- Do not use `git switch` in the shared root worktree for PR fixes.
 - If review feedback conflicts with the original issue requirements, note the conflict in a PR comment and follow the review feedback.
 - Always verify tests pass before pushing.
-- Always switch back to the original branch when done.
+- Always clean up the temporary worktree when done.

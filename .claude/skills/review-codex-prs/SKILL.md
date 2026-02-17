@@ -11,10 +11,16 @@ Find GitHub issues that Codex has worked on and are ready for review,
 locate the associated PR, perform a code review, and either approve
 (comment + merge) or request changes.
 
+This skill reviews PRs via `gh pr diff` and `git show` without checking
+out branches, so it is safe to run while other agents are working in
+their own worktrees. Do NOT `git switch` or `git checkout` in `/workspace`.
+If you need to read a specific file from the PR branch, use:
+`git -C /workspace show origin/<branch>:<path/to/file>`
+
 ## Preconditions
 
 - Confirm `gh auth status` succeeds.
-- Confirm repository remotes and branch status before proceeding.
+- Do not switch branches in `/workspace` — reviews are read-only via `gh` and `git show`.
 
 ## Workflow
 
