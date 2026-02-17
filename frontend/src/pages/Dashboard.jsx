@@ -19,23 +19,42 @@ const grid2 = {
   marginBottom: 16,
 }
 
+function ErrorCard({ message }) {
+  return (
+    <div style={{
+      background: '#1a1a2e',
+      borderRadius: 8,
+      padding: '16px',
+      border: '1px solid #2a2a4a',
+      color: '#f87171',
+      fontSize: '0.85rem',
+    }}>
+      {message}
+    </div>
+  )
+}
+
 export default function Dashboard() {
-  const { data: summary } = useApi(() => api.summary(), [])
-  const { data: mapData } = useApi(() => api.mapData(), [])
-  const { data: historical } = useApi(() => api.historical(), [])
-  const { data: subtypes } = useApi(() => api.subtypes(), [])
-  const { data: countries } = useApi(() => api.countries(), [])
-  const { data: anomalies } = useApi(() => api.anomalies(), [])
-  const { data: forecast } = useApi(() => api.forecast(), [])
-  const { data: cladeTrends } = useApi(() => api.genomicTrends(), [])
+  const { data: summary, error: summaryError } = useApi(() => api.summary(), [])
+  const { data: mapData, error: mapError } = useApi(() => api.mapData(), [])
+  const { data: historical, error: historicalError } = useApi(() => api.historical(), [])
+  const { data: subtypes, error: subtypesError } = useApi(() => api.subtypes(), [])
+  const { data: countries, error: countriesError } = useApi(() => api.countries(), [])
+  const { data: anomalies, error: anomaliesError } = useApi(() => api.anomalies(), [])
+  const { data: forecast, error: forecastError } = useApi(() => api.forecast(), [])
+  const { data: cladeTrends, error: cladeTrendsError } = useApi(() => api.genomicTrends(), [])
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f' }}>
       <Header lastUpdated={summary ? new Date().toISOString() : null} />
-      <AlertBar anomalies={anomalies} />
+      <AlertBar anomalies={anomalies} loadError={anomaliesError} />
 
       {/* Summary KPIs */}
-      {summary && (
+      {summaryError ? (
+        <div style={{ padding: '16px 24px' }}>
+          <ErrorCard message="Failed to load summary data — please refresh." />
+        </div>
+      ) : summary && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, padding: '16px 24px' }}>
           <KpiCard label="Total Cases" value={summary.total_cases?.toLocaleString()} />
           <KpiCard label="Countries Reporting" value={summary.countries_reporting} />
@@ -50,25 +69,25 @@ export default function Dashboard() {
 
       {/* Main grid: Map + Historical */}
       <div style={grid2}>
-        <ChoroplethMap data={mapData} />
-        <HistoricalChart data={historical} />
+        {mapError ? <ErrorCard message="Failed to load map data — please refresh." /> : <ChoroplethMap data={mapData} />}
+        {historicalError ? <ErrorCard message="Failed to load historical data — please refresh." /> : <HistoricalChart data={historical} />}
       </div>
 
       {/* Compare + Forecast */}
       <div style={grid2}>
         <CompareChart />
-        <ForecastChart data={forecast} />
+        {forecastError ? <ErrorCard message="Failed to load forecast data — please refresh." /> : <ForecastChart data={forecast} />}
       </div>
 
       {/* Secondary: Clade + Subtype */}
       <div style={grid2}>
-        <CladeTrends data={cladeTrends} />
-        <SubtypeTrends data={subtypes} />
+        {cladeTrendsError ? <ErrorCard message="Failed to load clade trend data — please refresh." /> : <CladeTrends data={cladeTrends} />}
+        {subtypesError ? <ErrorCard message="Failed to load subtype data — please refresh." /> : <SubtypeTrends data={subtypes} />}
       </div>
 
       {/* Country table */}
       <div style={{ padding: '0 24px 24px' }}>
-        <CountryTable data={countries} />
+        {countriesError ? <ErrorCard message="Failed to load country data — please refresh." /> : <CountryTable data={countries} />}
       </div>
 
       {/* Footer */}
