@@ -1,6 +1,6 @@
 from datetime import date
 from fastapi import APIRouter, Query
-from sqlalchemy import select, func, desc, text
+from sqlalchemy import and_, case, desc, func, select, text
 from app.database import async_session
 from app.models import FluCase
 from app.population import get_population
@@ -17,39 +17,49 @@ def _per_100k(cases: int, cc: str) -> float:
 @router.get("/cases/summary", response_model=CaseSummary)
 async def cases_summary():
     async with async_session() as session:
-        max_date_r = await session.execute(select(func.max(FluCase.time)))
-        max_date = max_date_r.scalar()
+        summary_r = await session.execute(
+            select(
+                func.max(FluCase.time).label("max_date"),
+                func.sum(FluCase.new_cases).label("total_cases"),
+                func.count(func.distinct(FluCase.country_code)).label("countries_reporting"),
+            )
+        )
+        summary = summary_r.one()
+        max_date = summary.max_date
         if not max_date:
             return CaseSummary()
 
         current_cutoff = weeks_ago(max_date, 1)
         prior_cutoff = weeks_ago(max_date, 2)
 
-        total_r = await session.execute(select(func.sum(FluCase.new_cases)))
-        total = total_r.scalar() or 0
-
-        countries_r = await session.execute(
-            select(func.count(func.distinct(FluCase.country_code)))
-        )
-        countries = countries_r.scalar() or 0
-
-        current_r = await session.execute(
-            select(func.sum(FluCase.new_cases)).where(FluCase.time >= current_cutoff)
-        )
-        current_week = current_r.scalar() or 0
-
-        prior_r = await session.execute(
-            select(func.sum(FluCase.new_cases)).where(
-                FluCase.time >= prior_cutoff, FluCase.time < current_cutoff
+        week_totals_r = await session.execute(
+            select(
+                func.sum(
+                    case((FluCase.time >= current_cutoff, FluCase.new_cases), else_=0)
+                ).label("current_week_cases"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                FluCase.time >= prior_cutoff,
+                                FluCase.time < current_cutoff,
+                            ),
+                            FluCase.new_cases,
+                        ),
+                        else_=0,
+                    )
+                ).label("prior_week_cases"),
             )
         )
-        prior_week = prior_r.scalar() or 0
+        week_totals = week_totals_r.one()
+        current_week = week_totals.current_week_cases or 0
+        prior_week = week_totals.prior_week_cases or 0
 
         change = ((current_week - prior_week) / prior_week * 100) if prior_week else 0
 
         return CaseSummary(
-            total_cases=total,
-            countries_reporting=countries,
+            total_cases=summary.total_cases or 0,
+            countries_reporting=summary.countries_reporting or 0,
             current_week_cases=current_week,
             prior_week_cases=prior_week,
             week_change_pct=round(change, 1),
