@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { api } from '../api'
 import { useApi } from '../hooks/useApi'
 import Header from '../components/Header'
@@ -35,9 +35,14 @@ function ErrorCard({ message }) {
 }
 
 export default function Dashboard() {
+  const [selectedCountry, setSelectedCountry] = useState('')
   const { data: summary, error: summaryError } = useApi(() => api.summary(), [])
   const { data: mapData, error: mapError } = useApi(() => api.mapData(), [])
-  const { data: historical, error: historicalError } = useApi(() => api.historical(), [])
+  const historicalParams = selectedCountry ? `country=${selectedCountry}` : ''
+  const { data: historical, error: historicalError } = useApi(
+    () => api.historical(historicalParams),
+    [selectedCountry],
+  )
   const { data: subtypes, error: subtypesError } = useApi(() => api.subtypes(), [])
   const { data: countries, error: countriesError } = useApi(() => api.countries(), [])
   const { data: anomalies, error: anomaliesError } = useApi(() => api.anomalies(), [])
@@ -69,8 +74,20 @@ export default function Dashboard() {
 
       {/* Main grid: Map + Historical */}
       <div style={grid2}>
-        {mapError ? <ErrorCard message="Failed to load map data — please refresh." /> : <ChoroplethMap data={mapData} />}
-        {historicalError ? <ErrorCard message="Failed to load historical data — please refresh." /> : <HistoricalChart data={historical} />}
+        {mapError ? (
+          <ErrorCard message="Failed to load map data — please refresh." />
+        ) : (
+          <ChoroplethMap
+            data={mapData}
+            selectedCountry={selectedCountry}
+            onSelectCountry={setSelectedCountry}
+          />
+        )}
+        {historicalError ? (
+          <ErrorCard message="Failed to load historical data — please refresh." />
+        ) : (
+          <HistoricalChart data={historical} country={selectedCountry} />
+        )}
       </div>
 
       {/* Compare + Forecast */}
@@ -87,7 +104,15 @@ export default function Dashboard() {
 
       {/* Country table */}
       <div style={{ padding: '0 24px 24px' }}>
-        {countriesError ? <ErrorCard message="Failed to load country data — please refresh." /> : <CountryTable data={countries} />}
+        {countriesError ? (
+          <ErrorCard message="Failed to load country data — please refresh." />
+        ) : (
+          <CountryTable
+            data={countries}
+            selectedCountry={selectedCountry}
+            onSelectCountry={setSelectedCountry}
+          />
+        )}
       </div>
 
       {/* Footer */}

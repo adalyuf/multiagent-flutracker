@@ -95,7 +95,9 @@ async def cases_map():
 
 
 @router.get("/cases/historical", response_model=list[HistoricalPoint])
-async def cases_historical():
+async def cases_historical(
+    country: str = Query("", max_length=2, description="Country code filter"),
+):
     """Season comparison data — current + past 9 seasons, normalized Oct-Sep."""
     async with async_session() as session:
         q = (
@@ -106,6 +108,8 @@ async def cases_historical():
             .group_by(FluCase.time)
             .order_by(FluCase.time)
         )
+        if country:
+            q = q.where(FluCase.country_code == country.upper())
         result = await session.execute(q)
         rows = list(result)
 

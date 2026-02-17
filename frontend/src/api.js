@@ -17,7 +17,7 @@ async function fetchJson(path) {
 export const api = {
   summary: () => fetchJson('/cases/summary'),
   mapData: () => fetchJson('/cases/map'),
-  historical: () => fetchJson('/cases/historical'),
+  historical: (params = '') => fetchJson(`/cases/historical${params ? '?' + params : ''}`),
   subtypes: () => fetchJson('/cases/subtypes'),
   countries: (params = '') => fetchJson(`/cases/countries${params ? '?' + params : ''}`),
   anomalies: () => fetchJson('/anomalies'),
