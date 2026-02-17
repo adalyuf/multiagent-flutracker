@@ -91,8 +91,6 @@ def _process_records(records: list) -> list[dict]:
     for rec in records:
         iso_year = rec.get("ISO_YEAR")
         iso_week = rec.get("ISO_WEEK")
-        country_raw = rec.get("COUNTRY_AREA_TERRITORY") or rec.get("ISO2", "")
-
         if not iso_year or not iso_week:
             continue
 
