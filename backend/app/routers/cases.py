@@ -239,12 +239,12 @@ async def cases_countries(
 
     rows = []
     sorted_countries = sorted(current_data.items(), key=lambda x: x[1], reverse=True)
+    max_per100k = max((_per_100k(t, c) for c, t in current_data.items()), default=1)
 
     for rank, (cc, total) in enumerate(sorted_countries, 1):
         prior = prior_data.get(cc, 0)
         delta = ((total - prior) / prior * 100) if prior else 0
         per100k = _per_100k(total, cc)
-        max_per100k = max(_per_100k(t, c) for c, t in current_data.items()) if current_data else 1
         severity = min(per100k / max(max_per100k, 1), 1.0)
 
         if search and search.lower() not in cc.lower():
