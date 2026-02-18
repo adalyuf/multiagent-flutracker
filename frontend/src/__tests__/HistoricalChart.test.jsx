@@ -14,6 +14,12 @@ const wideCIForecast = {
     { date: '2024-01-14', forecast: 85, lower: 45, upper: 9500 },
   ],
 }
+const boundedForecast = {
+  forecast: [
+    { date: '2024-01-07', forecast: 90, lower: 50, upper: 95 },
+    { date: '2024-01-14', forecast: 85, lower: 45, upper: 92 },
+  ],
+}
 
 describe('HistoricalChart', () => {
   it('renders the svg without crashing', () => {
@@ -40,5 +46,20 @@ describe('HistoricalChart', () => {
       <HistoricalChart data={historicalData} forecast={wideCIForecast} />,
     )
     expect(container.querySelector('clipPath')).toBeInTheDocument()
+  })
+
+  it('shows CI clipping indicator when forecast upper bound exceeds y-axis domain', () => {
+    const { container } = render(
+      <HistoricalChart data={historicalData} forecast={wideCIForecast} />,
+    )
+    expect(container.querySelector('svg text')?.textContent).toBeTruthy()
+    expect(container.textContent).toContain('↑ CI extends beyond chart')
+  })
+
+  it('does not show CI clipping indicator when forecast upper bound fits in domain', () => {
+    const { container } = render(
+      <HistoricalChart data={historicalData} forecast={boundedForecast} />,
+    )
+    expect(container.textContent).not.toContain('↑ CI extends beyond chart')
   })
 })

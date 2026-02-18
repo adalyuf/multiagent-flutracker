@@ -49,6 +49,8 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
       d3.max(data, d => d.cases) || 1,
       d3.max(fcastPoints, d => d.forecast) || 0,
     )
+    const ciUpperMax = d3.max(fcastPoints, d => d.upper) || 0
+    const isCiClipped = ciUpperMax > yMax
 
     const x = d3.scaleLinear().domain(xExtent).range([margin.left, width - margin.right])
     const y = d3.scaleLinear().domain([0, yMax]).range([height - margin.bottom, margin.top])
@@ -145,6 +147,25 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
           .attr('fill', '#f59e0b')
           .attr('font-size', '0.65rem')
           .text('Forecast')
+
+        if (isCiClipped) {
+          svg.append('line')
+            .attr('x1', margin.left)
+            .attr('x2', width - margin.right)
+            .attr('y1', margin.top + 1)
+            .attr('y2', margin.top + 1)
+            .attr('stroke', '#f59e0b')
+            .attr('stroke-width', 1)
+            .attr('stroke-dasharray', '3,3')
+            .attr('opacity', 0.8)
+
+          svg.append('text')
+            .attr('x', margin.left + 4)
+            .attr('y', margin.top + 12)
+            .attr('fill', '#f59e0b')
+            .attr('font-size', '0.65rem')
+            .text('↑ CI extends beyond chart')
+        }
       }
     }
   }, [data, forecast])
