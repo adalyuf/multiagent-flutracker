@@ -43,7 +43,14 @@ Find GitHub issues ready for review in the peer agent queue, locate the associat
 
 - Read PR details: `gh pr view <pr-number>`.
 - Read full diff: `gh pr diff <pr-number>`.
-- Check CI status: `gh pr checks <pr-number> --required`.
+- Check required CI status with explicit no-required handling:
+  - `set +e`
+  - `checks_output="$(gh pr checks <pr-number> --required 2>&1)"`
+  - `checks_code=$?`
+  - `set -e`
+  - If `checks_code` is `0`, required checks are green.
+  - If `checks_code` is non-zero and `checks_output` contains `no required checks reported`, treat as green and continue.
+  - Otherwise, treat as failing checks and request changes.
 - If local validation is needed, use a temporary review worktree:
   - `git fetch origin <headRefName>`
   - `git worktree add /workspace/worktrees/review-pr-<pr-number> origin/<headRefName>`
@@ -95,6 +102,7 @@ Use this structure:
 
 - Do NOT use `gh pr review --approve` (fails on own PRs). Use `gh pr comment` instead.
 - Do not merge if required checks are failing.
+- Treat `gh pr checks --required` exit `1` with `no required checks reported` as a passing no-required-checks state.
 - Provide specific, actionable feedback when requesting changes.
 - Review the full diff, not only summary text.
 - Prefer temporary worktrees for local PR validation.
