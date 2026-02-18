@@ -36,7 +36,7 @@ fi
 
 # --- Strategy 2: PR body search -------------------------------------------
 # Search both open and closed PRs for "Closes #N" / "Fixes #N" in the body.
-PR=$(gh pr list --state all --json number,body \
+PR=$(gh pr list --state all --limit 200 --json number,body \
   --jq "[.[] | select(.body | test(\"(Closes|Fixes|closes|fixes) #${ISSUE}(\\\\b|$)\"))
              | .number] | first // empty" 2>/dev/null || true)
 
