@@ -5,6 +5,7 @@ import { useApi } from '../hooks/useApi'
 import KpiCards from '../components/KpiCards'
 import CladeTrends from '../components/CladeTrends'
 import GenomicsTable from '../components/GenomicsTable'
+import ErrorBoundary from '../components/ErrorBoundary'
 
 export default function Genomics() {
   const [years, setYears] = useState(1)
@@ -74,21 +75,21 @@ export default function Genomics() {
       <div style={{ padding: '0 24px 16px' }}>
         {summaryError
           ? <p style={{ color: '#f87171', fontSize: '0.85rem' }}>Failed to load genomics summary — please refresh.</p>
-          : <KpiCards data={summary} />}
+          : <ErrorBoundary><KpiCards data={summary} /></ErrorBoundary>}
       </div>
 
       {/* Clade trends chart */}
       <div style={{ padding: '0 24px 16px' }}>
         {trendsError
           ? <p style={{ color: '#f87171', fontSize: '0.85rem' }}>Failed to load trend data — please refresh.</p>
-          : <CladeTrends data={trends} />}
+          : <ErrorBoundary><CladeTrends data={trends} /></ErrorBoundary>}
       </div>
 
       {/* Countries table */}
       <div style={{ padding: '0 24px 24px' }}>
         {countriesError
           ? <p style={{ color: '#f87171', fontSize: '0.85rem' }}>Failed to load countries data — please refresh.</p>
-          : <GenomicsTable data={countries} />}
+          : <ErrorBoundary><GenomicsTable data={countries} /></ErrorBoundary>}
       </div>
     </div>
   )

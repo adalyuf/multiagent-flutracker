@@ -10,6 +10,7 @@ import CladeTrends from '../components/CladeTrends'
 import SubtypeTrends from '../components/SubtypeTrends'
 import CountryTable from '../components/CountryTable'
 import ForecastChart from '../components/ForecastChart'
+import ErrorBoundary from '../components/ErrorBoundary'
 
 const grid2 = {
   display: 'grid',
@@ -52,7 +53,7 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f' }}>
       <Header lastUpdated={summary ? new Date().toISOString() : null} />
-      <AlertBar anomalies={anomalies} loadError={anomaliesError} />
+      <ErrorBoundary><AlertBar anomalies={anomalies} loadError={anomaliesError} /></ErrorBoundary>
 
       {/* Summary KPIs */}
       {summaryError ? (
@@ -60,16 +61,18 @@ export default function Dashboard() {
           <ErrorCard message="Failed to load summary data — please refresh." />
         </div>
       ) : summary && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, padding: '16px 24px' }}>
-          <KpiCard label="Total Cases" value={summary.total_cases?.toLocaleString()} />
-          <KpiCard label="Countries Reporting" value={summary.countries_reporting} />
-          <KpiCard label="This Week" value={summary.current_week_cases?.toLocaleString()} />
-          <KpiCard
-            label="Week Change"
-            value={`${summary.week_change_pct >= 0 ? '+' : ''}${summary.week_change_pct?.toFixed(1)}%`}
-            color={summary.week_change_pct >= 0 ? '#ef4444' : '#22c55e'}
-          />
-        </div>
+        <ErrorBoundary>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, padding: '16px 24px' }}>
+            <KpiCard label="Total Cases" value={summary.total_cases?.toLocaleString()} />
+            <KpiCard label="Countries Reporting" value={summary.countries_reporting} />
+            <KpiCard label="This Week" value={summary.current_week_cases?.toLocaleString()} />
+            <KpiCard
+              label="Week Change"
+              value={`${summary.week_change_pct >= 0 ? '+' : ''}${summary.week_change_pct?.toFixed(1)}%`}
+              color={summary.week_change_pct >= 0 ? '#ef4444' : '#22c55e'}
+            />
+          </div>
+        </ErrorBoundary>
       )}
 
       {/* Main grid: Map + Historical */}
@@ -77,29 +80,45 @@ export default function Dashboard() {
         {mapError ? (
           <ErrorCard message="Failed to load map data — please refresh." />
         ) : (
-          <ChoroplethMap
-            data={mapData}
-            selectedCountry={selectedCountry}
-            onSelectCountry={setSelectedCountry}
-          />
+          <ErrorBoundary>
+            <ChoroplethMap
+              data={mapData}
+              selectedCountry={selectedCountry}
+              onSelectCountry={setSelectedCountry}
+            />
+          </ErrorBoundary>
         )}
         {historicalError ? (
           <ErrorCard message="Failed to load historical data — please refresh." />
         ) : (
-          <HistoricalChart data={historical} country={selectedCountry} />
+          <ErrorBoundary>
+            <HistoricalChart data={historical} country={selectedCountry} />
+          </ErrorBoundary>
         )}
       </div>
 
       {/* Compare + Forecast */}
       <div style={grid2}>
-        <CompareChart />
-        {forecastError ? <ErrorCard message="Failed to load forecast data — please refresh." /> : <ForecastChart data={forecast} />}
+        <ErrorBoundary><CompareChart /></ErrorBoundary>
+        {forecastError ? (
+          <ErrorCard message="Failed to load forecast data — please refresh." />
+        ) : (
+          <ErrorBoundary><ForecastChart data={forecast} /></ErrorBoundary>
+        )}
       </div>
 
       {/* Secondary: Clade + Subtype */}
       <div style={grid2}>
-        {cladeTrendsError ? <ErrorCard message="Failed to load clade trend data — please refresh." /> : <CladeTrends data={cladeTrends} />}
-        {subtypesError ? <ErrorCard message="Failed to load subtype data — please refresh." /> : <SubtypeTrends data={subtypes} />}
+        {cladeTrendsError ? (
+          <ErrorCard message="Failed to load clade trend data — please refresh." />
+        ) : (
+          <ErrorBoundary><CladeTrends data={cladeTrends} /></ErrorBoundary>
+        )}
+        {subtypesError ? (
+          <ErrorCard message="Failed to load subtype data — please refresh." />
+        ) : (
+          <ErrorBoundary><SubtypeTrends data={subtypes} /></ErrorBoundary>
+        )}
       </div>
 
       {/* Country table */}
@@ -107,11 +126,13 @@ export default function Dashboard() {
         {countriesError ? (
           <ErrorCard message="Failed to load country data — please refresh." />
         ) : (
-          <CountryTable
-            data={countries}
-            selectedCountry={selectedCountry}
-            onSelectCountry={setSelectedCountry}
-          />
+          <ErrorBoundary>
+            <CountryTable
+              data={countries}
+              selectedCountry={selectedCountry}
+              onSelectCountry={setSelectedCountry}
+            />
+          </ErrorBoundary>
         )}
       </div>
 
