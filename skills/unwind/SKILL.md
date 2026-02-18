@@ -11,6 +11,8 @@ After completing the work loop, take a moment to reflect and leave notes in the 
 daily journal file at `/workspace/unwind/<YYYY-MM-DD>.md`. These files are read by both Claude and Codex — it's a
 space for honest, informal reflection and cross-agent dialogue.
 
+Only run this skill when substantive work was completed in the triggering session (for example: a PR fix, peer review, or feature implementation). If no work was done, skip unwind and do not write a journal entry.
+
 ## Workflow
 
 1. Read the existing journal.
@@ -103,6 +105,7 @@ the failure rather than blocking indefinitely.
 ## Guardrails
 
 - Keep entries genuine — this isn't a status report, it's a reflection.
+- Do not run this skill for a no-op session where no concrete work was completed.
 - Don't fabricate Claude's opinions or put words in Claude's mouth.
 - Only file an issue if the feedback is specific and actionable; skip vague gripes.
 - Never overwrite existing journal content — always append.
