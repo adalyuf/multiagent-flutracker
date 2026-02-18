@@ -1,31 +1,40 @@
 ---
 name: run-tests
-description: Run the backend and frontend test suites inside their respective Docker containers and report results. Use when asked to run tests, verify a fix, or check that nothing is broken.
+description: Run the backend and frontend test suites and report results. Use when asked to run tests, verify a fix, or check that nothing is broken.
 ---
 
 # Run Tests
 
 ## Overview
 
-Execute the backend and frontend test suites inside their running Docker
-containers and report a clear pass/fail summary for each.
+Execute the backend and frontend test suites and report a clear pass/fail
+summary for each.
+
+**Important:** The two suites run in different environments:
+
+- **Backend** — run inside the `backend` Docker container via `docker compose exec`.
+- **Frontend** — run directly on the host using the `node_modules/.bin/vitest`
+  binary. The frontend Docker container is a production nginx image (multi-stage
+  build); Node.js is not present in it and `docker compose exec frontend npm test`
+  will fail with `npm: not found`.
 
 ## Preconditions
 
-- The Docker containers must be running. Verify with `docker compose ps`.
-- If the containers are not running, start them: `docker compose up -d`.
 - Run all commands from `/workspace` (the repo root where `docker-compose.yml` lives).
+- The `backend` container must be running for backend tests. Verify with `docker compose ps`.
+- `node_modules` must be installed for frontend tests. They are pre-installed at
+  `/workspace/frontend/node_modules`; no install step is needed in normal use.
 
 ## Workflow
 
-### 1. Check containers are up
+### 1. Check backend container is up
 
 ```bash
 docker compose ps
 ```
 
-- Confirm `backend` and `frontend` services show as running.
-- If either is missing, run `docker compose up -d <service>` before proceeding.
+- Confirm the `backend` service shows as running.
+- If it is missing, run `docker compose up -d backend` before proceeding.
 
 ### 2. Run backend tests
 
@@ -42,13 +51,16 @@ docker compose exec backend pytest
 ### 3. Run frontend tests
 
 ```bash
-docker compose exec frontend npm test
+cd /workspace/frontend && node_modules/.bin/vitest run
 ```
 
-- Runs `vitest run` (non-interactive, exits after one pass).
-- Capture the exit code and the summary line (e.g. `✓ 12 tests passed`).
-- If only a subset is needed, append a filename or test-name pattern:
-  - `docker compose exec frontend npm test -- <pattern>`
+- Runs vitest in non-interactive mode (exits after one pass).
+- Capture the exit code and the summary line (e.g. `39 passed`).
+- If only a subset is needed, pass a file path or pattern:
+  - `node_modules/.bin/vitest run src/__tests__/HistoricalChart.test.jsx`
+  - `node_modules/.bin/vitest run --reporter=verbose`
+- Do **not** use `docker compose exec frontend` — the frontend container is nginx
+  and has no Node.js runtime.
 
 ### 4. Report results
 
@@ -64,8 +76,8 @@ Frontend: <N passed, M failed> — <exit code 0/1>
 
 ## Guardrails
 
-- Always run tests inside the containers, never directly on the host.
+- Run backend tests inside the container; run frontend tests on the host.
 - Do not modify test files or source code as part of running tests.
-- If a container is unhealthy or crashes during the test run, report the
-  container logs (`docker compose logs <service>`) rather than retrying blindly.
+- If the backend container is unhealthy or crashes during the test run, report
+  its logs (`docker compose logs backend`) rather than retrying blindly.
 - Record the full exit code for each suite; exit code 0 means all tests passed.

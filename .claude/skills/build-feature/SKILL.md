@@ -43,6 +43,20 @@ The main `/workspace` checkout always stays on `main`.
   ```
 - All subsequent file reads, edits, and git commands operate inside `/workspace/.worktrees/<branch>`.
 
+- **Symlink untracked dependency directories** so tests run without a full install.
+  Worktrees share git history but not untracked files like `node_modules`.
+  After creating the worktree, symlink each dependency directory that exists in the main workspace:
+  ```
+  # Frontend JavaScript dependencies
+  if [ -d /workspace/frontend/node_modules ]; then
+    ln -s /workspace/frontend/node_modules \
+          /workspace/.worktrees/<branch>/frontend/node_modules
+  fi
+  # Add similar lines for other package dirs (e.g. backend virtualenvs) if present
+  ```
+  This lets you run `node_modules/.bin/vitest run` (or any test runner) directly
+  from the worktree subdirectory without re-installing packages.
+
 4. Verify issue-described base state on `main`.
 
 - Before editing, confirm that the key base-state assumption in the issue body is actually true on `origin/main`.
@@ -92,13 +106,18 @@ The main `/workspace` checkout always stays on `main`.
 
 10. Clean up the worktree.
 
-- First, return to the root workspace so the worktree is not the current directory:
+- First, remove any dependency symlinks you created in step 3, so that
+  `git worktree remove` does not complain about untracked files:
+  ```
+  rm /workspace/.worktrees/<branch>/frontend/node_modules
+  # Remove any other symlinks created in step 3
+  ```
+- Then change the shell's working directory to `/workspace` **before** removing
+  the worktree. Using `-C` is not sufficient — the shell's cwd must actually
+  change, or commands will break after the directory is deleted:
   ```
   cd /workspace
-  ```
-- Remove the worktree directory only — do NOT delete the branch:
-  ```
-  git -C /workspace worktree remove /workspace/.worktrees/<branch>
+  git worktree remove /workspace/.worktrees/<branch>
   ```
 - The branch remains available in the local repo and on the remote until the PR is merged.
 

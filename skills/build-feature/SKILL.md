@@ -19,7 +19,7 @@ Prioritize correctness, minimal diffs, and explicit verification.
 ## Worktree Conventions
 
 - Use a dedicated worktree per issue so multiple agents can run concurrently.
-- Use absolute path: `/workspace/worktrees/<branch>`.
+- Use absolute path: `/workspace/.worktrees/<branch>`.
 - Do all issue edits, commits, and pushes from that issue worktree, not the shared root worktree.
 
 ## Workflow
@@ -40,8 +40,20 @@ Prioritize correctness, minimal diffs, and explicit verification.
 - Use `fix/issue-<number>-<short-slug>`.
 - Create from `origin/main` with:
   - `git fetch origin`
-  - `git worktree add -b <branch> /workspace/worktrees/<branch> origin/main`
-- Run all following commands from `/workspace/worktrees/<branch>`.
+  - `git worktree add -b <branch> /workspace/.worktrees/<branch> origin/main`
+- Run all following commands from `/workspace/.worktrees/<branch>`.
+
+- **Symlink untracked dependency directories** so tests run without a full install.
+  Worktrees share git history but not untracked files like `node_modules`.
+  After creating the worktree, symlink each dependency directory that exists in the main workspace:
+  ```
+  # Frontend JavaScript dependencies
+  if [ -d /workspace/frontend/node_modules ]; then
+    ln -s /workspace/frontend/node_modules \
+          /workspace/.worktrees/<branch>/frontend/node_modules
+  fi
+  # Add similar lines for other package dirs if present
+  ```
 
 4. Verify issue-described base state on `main`.
 
@@ -84,8 +96,18 @@ Prioritize correctness, minimal diffs, and explicit verification.
 
 - After finishing the PR handoff, call `build-feature` again to pick up the next `assigned:codex` issue.
 - Remove the issue worktree after handoff if it is clean:
-  - Return to the root workspace first: `cd /workspace`.
-  - Remove from root workspace: `cd /workspace && git worktree remove /workspace/worktrees/<branch>`.
+  - First, remove any dependency symlinks created in step 3:
+    ```
+    rm /workspace/.worktrees/<branch>/frontend/node_modules
+    # Remove any other symlinks created in step 3
+    ```
+  - Then `cd /workspace` to move the shell's cwd out of the worktree directory.
+    Using `git -C /workspace` is not sufficient — the shell's cwd must actually
+    change before the directory is deleted or subsequent commands will break.
+  - Remove the worktree:
+    ```
+    cd /workspace && git worktree remove /workspace/.worktrees/<branch>
+    ```
 
 ## PR Body Template
 
