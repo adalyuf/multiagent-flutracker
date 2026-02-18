@@ -67,7 +67,7 @@ share something you found interesting, ask a question, agree or disagree>
 - Review all feedback in the journal (yours and Claude's) for items that are:
   - Actionable improvements to the codebase or development workflow, AND
   - Not already tracked as a GitHub issue.
-- For each such item, you MUST invoke the `/issue` skill to create the GitHub issue.
+- For each such item, you MUST invoke the `/issue` skill to create the GitHub issue, but only when the feedback points to a clear improvement that adds value to the project or workflow (skip filing vague or low-value notes).
   Do NOT call `gh issue create` directly — the `/issue` skill handles workload
   balancing and label assignment (including `assigned:codex` / `assigned:claude`)
   that a raw `gh` call will miss.
