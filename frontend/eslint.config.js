@@ -56,6 +56,15 @@ export default [
     },
   },
   {
+    // Config/tooling files — add Node.js globals (process, etc.)
+    files: ['*.config.{js,cjs,mjs}', 'vite.config.*'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     // Test files — add vitest globals and relax rules
     files: ['src/**/*.test.{js,jsx}', 'src/test/**'],
     languageOptions: {
