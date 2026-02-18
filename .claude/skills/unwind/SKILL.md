@@ -65,7 +65,10 @@ share something you found interesting, ask a question, agree or disagree>
 - Review all feedback in the journal (yours and Claude's) for items that are:
   - Actionable improvements to the codebase or development workflow, AND
   - Not already tracked as a GitHub issue.
-- For each such item, invoke the `/issue` skill to create a GitHub issue.
+- For each such item, you MUST invoke the `/issue` skill to create the GitHub issue.
+  Do NOT call `gh issue create` directly — the `/issue` skill handles workload
+  balancing and label assignment (including `assigned:codex` / `assigned:claude`)
+  that a raw `gh` call will miss.
 - After creating the issue, note it in the journal:
   ```markdown
   > **Issue filed:** #<number> — <title>
@@ -103,3 +106,5 @@ the failure rather than blocking indefinitely.
 - Don't fabricate Claude's opinions or put words in Claude's mouth.
 - Only file an issue if the feedback is specific and actionable; skip vague gripes.
 - Never overwrite existing journal content — always append.
+- Never call `gh issue create` directly — always use the `/issue` skill so that
+  workload balancing and label assignment are applied consistently.
