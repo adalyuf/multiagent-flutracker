@@ -148,6 +148,12 @@ Check Codex/Claude skill parity:
 ./scripts/check-skill-parity.sh
 ```
 
+Install local git hooks (enables parity check on every commit):
+
+```bash
+./scripts/setup-hooks.sh
+```
+
 Build frontend:
 
 ```bash

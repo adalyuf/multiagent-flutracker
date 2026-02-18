@@ -1,6 +1,6 @@
 ---
 name: build-feature
-description: "Find open issues, choose one, create a worktree, implement and verify a fix, open a pull request."
+description: "Execute the GitHub workflow for assigned issues: find open issues with label assigned:codex, choose one actionable issue, create a task worktree + branch, implement and verify a fix, open a pull request, and set the needs-review label. Use when asked to take an assigned issue through implementation and PR handoff with gh CLI."
 ---
 
 # GitHub Assigned Issue PR
@@ -10,38 +10,38 @@ description: "Find open issues, choose one, create a worktree, implement and ver
 Execute a consistent, end-to-end issue workflow with `gh` and `git`.
 Prioritize correctness, minimal diffs, and explicit verification.
 
-Work is always done in an isolated git worktree under `/workspace/.worktrees/<branch>`
-so that multiple agents can operate simultaneously without interfering with each other.
-The main `/workspace` checkout always stays on `main`.
-
 ## Preconditions
 
-- Confirm repository remotes and branch status before editing.
+- Confirm repository remotes and worktree status before editing.
 - Confirm `gh auth status` succeeds.
 - Leave unrelated local changes untouched.
+
+## Worktree Conventions
+
+- Use a dedicated worktree per issue so multiple agents can run concurrently.
+- Use absolute path: `/workspace/.worktrees/<branch>`.
+- Do all issue edits, commits, and pushes from that issue worktree, not the shared root worktree.
 
 ## Workflow
 
 1. Discover assigned issues.
 
-- Run `gh issue list --label assigned:claude --state open`.
+- Run `gh issue list --label assigned:codex --state open`.
 - If none are assigned, report that and stop.
 
 2. Select the issue.
 
-- Prefer the lowest-numbered actionable issue (no `needs-review` or `needs:changes` label).
-- Read issue details with `gh issue view <number> --json number,title,body,labels`.
-- Add the `assigned:claude` label if missing: `gh issue edit <number> --add-label assigned:claude`.
+- Prefer issue labels or severity guidance if present.
+- Read issue details with `gh issue view <number>`.
+- Add the `assigned:codex` label if missing: `gh issue edit <number> --add-label assigned:codex`.
 
-3. Create a worktree for the branch.
+3. Create task worktree and branch.
 
-- Branch name: `fix/issue-<number>-<short-slug>`.
-- Worktree path: `/workspace/.worktrees/<branch>` (e.g. `/workspace/.worktrees/fix/issue-22-my-slug`).
-- Create the branch and worktree in one step:
-  ```
-  git -C /workspace worktree add /workspace/.worktrees/<branch> -b <branch>
-  ```
-- All subsequent file reads, edits, and git commands operate inside `/workspace/.worktrees/<branch>`.
+- Use `fix/issue-<number>-<short-slug>`.
+- Create from `origin/main` with:
+  - `git fetch origin`
+  - `git worktree add -b <branch> /workspace/.worktrees/<branch> origin/main`
+- Run all following commands from `/workspace/.worktrees/<branch>`.
 
 - **Symlink untracked dependency directories** so tests run without a full install.
   Worktrees share git history but not untracked files like `node_modules`.
@@ -52,10 +52,8 @@ The main `/workspace` checkout always stays on `main`.
     ln -s /workspace/frontend/node_modules \
           /workspace/.worktrees/<branch>/frontend/node_modules
   fi
-  # Add similar lines for other package dirs (e.g. backend virtualenvs) if present
+  # Add similar lines for other package dirs if present
   ```
-  This lets you run `node_modules/.bin/vitest run` (or any test runner) directly
-  from the worktree subdirectory without re-installing packages.
 
 4. Verify issue-described base state on `main`.
 
@@ -72,60 +70,67 @@ The main `/workspace` checkout always stays on `main`.
 
 6. Verify.
 
-- Run focused tests first, then broader relevant tests (from within the worktree directory).
+- Run focused tests first, then broader relevant tests.
 - Record pass/fail summary for PR notes.
 
 7. Commit and push.
 
-- Stage only intended files (run git commands from the worktree path).
+- Stage only intended files.
 - Write a specific commit message.
-- Push: `git -C /workspace/.worktrees/<branch> push -u origin <branch>`.
+- Push: `git push -u origin <branch>`.
 
 8. Open PR.
 
-- Write the PR body to a temp file, then create the PR:
-  ```
-  cat > /tmp/gh-body.md << 'EOF'
-  ## Summary
-
-  - <change 1>
-  - <change 2>
-
-  ## Testing
-
-  - `<command and result>`
-
-  Closes #<issue-number>
-  EOF
-  gh pr create --title "<title>" --body-file /tmp/gh-body.md --base main --head <branch>
-  ```
+- Create PR against `main` unless repo specifies another base.
+- Include summary, testing, and `Closes #<number>`.
+- Standardize on `--body-file`:
+  - Write PR body to `/tmp/pr-<number>.md`.
+  - Create PR with `gh pr create --base main --head <branch> --title "<title>" --body-file /tmp/pr-<number>.md`.
 
 9. Apply review label.
 
-- Add `needs-review` label to the PR and to the issue.
+- Add `needs-review` label to PR.
+- If workflow expects issue labeling too, add `needs-review` to the issue.
 
-10. Clean up the worktree.
+10. Continue queue processing.
 
-- First, remove any dependency symlinks you created in step 3, so that
-  `git worktree remove` does not complain about untracked files:
-  ```
-  rm /workspace/.worktrees/<branch>/frontend/node_modules
-  # Remove any other symlinks created in step 3
-  ```
-- Then change the shell's working directory to `/workspace` **before** removing
-  the worktree. Using `-C` is not sufficient — the shell's cwd must actually
-  change, or commands will break after the directory is deleted:
-  ```
-  cd /workspace
-  git worktree remove /workspace/.worktrees/<branch>
-  ```
-- The branch remains available in the local repo and on the remote until the PR is merged.
+- After finishing the PR handoff, call `build-feature` again to pick up the next `assigned:codex` issue.
+- Remove the issue worktree after handoff if it is clean:
+  - First, remove any dependency symlinks created in step 3:
+    ```
+    rm /workspace/.worktrees/<branch>/frontend/node_modules
+    # Remove any other symlinks created in step 3
+    ```
+  - Then `cd /workspace` to move the shell's cwd out of the worktree directory.
+    Using `git -C /workspace` is not sufficient — the shell's cwd must actually
+    change before the directory is deleted or subsequent commands will break.
+  - Remove the worktree:
+    ```
+    cd /workspace && git worktree remove /workspace/.worktrees/<branch>
+    ```
+
+## PR Body Template
+
+Use this structure:
+
+```md
+## Summary
+
+- <change 1>
+- <change 2>
+
+## Testing
+
+- `<command>`
+- `<command>`
+
+Closes #<issue-number>
+```
 
 ## Guardrails
 
-- Never `git switch` or `git checkout` in `/workspace`. Use worktrees only.
-- Worktree root is always `/workspace/.worktrees/` — never use `/workspace/worktrees/` or any other path.
 - Never include unrelated file changes in commits.
 - Never remove or revert user changes you did not make.
+- Never use `git switch` in the shared root worktree for task development.
+- Always clean up the issue worktree when the task is complete.
 - If tooling fails (for example, old `gh` behavior), use `gh api` fallback and verify resulting PR/labels explicitly.
-- Always remove the worktree after the branch is pushed. Never delete the branch itself.

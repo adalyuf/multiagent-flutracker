@@ -34,7 +34,7 @@ Use `gh` to submit the issue and return the URL.
     | jq '[.[] | select(.labels | map(.name) | (contains(["needs-review"]) or contains(["needs:changes"])) | not)] | length'
   ```
   Assign to whichever agent has fewer actionable open issues.
-  Break ties by assigning to `assigned:claude`.
+  Break ties by assigning to `assigned:codex`.
 - Add any other relevant labels that already exist in the repo (check with `gh label list`).
 
 3. Draft the issue.
