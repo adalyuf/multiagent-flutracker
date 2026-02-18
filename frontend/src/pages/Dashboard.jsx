@@ -42,6 +42,11 @@ export default function Dashboard() {
     () => api.historical(historicalParams),
     [selectedCountry],
   )
+  const forecastParams = selectedCountry ? `country=${selectedCountry}` : ''
+  const { data: forecast, error: forecastError } = useApi(
+    () => api.forecast(forecastParams),
+    [selectedCountry],
+  )
   const { data: subtypes, error: subtypesError } = useApi(() => api.subtypes(), [])
   const { data: countries, error: countriesError } = useApi(() => api.countries(), [])
   const { data: anomalies, error: anomaliesError } = useApi(() => api.anomalies(), [])
@@ -72,7 +77,7 @@ export default function Dashboard() {
         </ErrorBoundary>
       )}
 
-      {/* Main grid: Map + Historical */}
+      {/* Main grid: Map + Historical (with integrated trend & forecast) */}
       <div style={grid2}>
         {mapError ? (
           <ErrorCard message="Failed to load map data — please refresh." />
@@ -89,7 +94,12 @@ export default function Dashboard() {
           <ErrorCard message="Failed to load historical data — please refresh." />
         ) : (
           <ErrorBoundary>
-            <HistoricalChart data={historical} country={selectedCountry} />
+            <HistoricalChart
+              data={historical}
+              country={selectedCountry}
+              forecast={forecastError ? null : forecast}
+              forecastUnavailable={!!forecastError}
+            />
           </ErrorBoundary>
         )}
       </div>
