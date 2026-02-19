@@ -6,16 +6,7 @@ on:
   pull_request:
 
 jobs:
-  skill-parity-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run skill parity check
-        run: bash scripts/check-skill-parity.sh
-
   frontend-unit-tests:
-    needs: skill-parity-check
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,7 +28,6 @@ jobs:
         run: npm test
 
   backend-tests:
-    needs: skill-parity-check
     runs-on: ubuntu-latest
     defaults:
       run:

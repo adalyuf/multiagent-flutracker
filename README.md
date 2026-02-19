@@ -108,7 +108,7 @@ Open `http://localhost:5173`.
 
 ## Multi-agent development workflow
 
-This repo uses skill-driven agent workflows (see `skills/` and `AGENTS.md`) with label-based coordination.
+This repo uses skill-driven agent workflows (see `skills/` and `AGENTS.md`) with label-based coordination. Supported agents: Codex (`AGENTS.md`), Claude Code (`.claude/skills/` symlinks), and Gemini CLI (`GEMINI.md` + `.gemini/settings.json`).
 
 Common labels:
 - `assigned:codex` / `assigned:claude`: ownership
@@ -157,16 +157,12 @@ npx playwright test
 > there. The `frontend/playwright.config.js` controls test discovery and is what CI uses.
 > Do not add tests to the root-level `e2e/` directory — it is not wired to CI.
 
-Check Codex/Claude skill parity:
+Skill files live in `skills/`. Claude Code reads from `.claude/skills/` via symlinks.
+To add a new skill, create `skills/<name>/SKILL.md` and symlink it:
 
 ```bash
-./scripts/check-skill-parity.sh
-```
-
-Install local git hooks (enables parity check on every commit):
-
-```bash
-./scripts/setup-hooks.sh
+mkdir -p .claude/skills/<name>
+ln -s ../../../skills/<name>/SKILL.md .claude/skills/<name>/SKILL.md
 ```
 
 Build frontend:
