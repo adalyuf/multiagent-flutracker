@@ -1,5 +1,5 @@
 {
-  "name": "Claude Code Sandbox",
+  "name": "AI Dev Container",
   "build": {
     "dockerfile": "Dockerfile"
   },

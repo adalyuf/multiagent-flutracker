@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:20 AS ai-devcontainer
 
 ARG CLAUDE_CODE_VERSION=latest
 
