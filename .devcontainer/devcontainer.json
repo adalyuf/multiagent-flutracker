@@ -19,7 +19,14 @@
         "anthropic.claude-code",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "vitest.explorer",
+        "ms-playwright.playwright",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-azuretools.vscode-docker",
+        "github.vscode-pull-request-github",
+        "humao.rest-client"
       ],
       "settings": {
         "editor.formatOnSave": true,
