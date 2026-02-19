@@ -5,6 +5,17 @@ Uses an in-memory SQLite database (via aiosqlite) so tests run without
 a real PostgreSQL instance.
 """
 
+import os
+
+# Ensure DATABASE_URL is set before any app module is imported, since
+# app.config.Settings requires it at import time.  Tests never use this
+# value (conftest patches async_session with an in-memory SQLite engine),
+# but the Settings validator must not fail during collection.
+os.environ.setdefault(
+    "DATABASE_URL",
+    "sqlite+aiosqlite:///file:test?mode=memory&cache=shared&uri=true",
+)
+
 from datetime import date, datetime
 
 import pytest_asyncio
