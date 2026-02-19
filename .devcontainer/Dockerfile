@@ -79,6 +79,9 @@ RUN ARCH=$(dpkg --print-architecture) && \
   sudo dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
+# Install Playwright system dependencies (needs root for apt-get)
+RUN npx -y playwright install-deps
+
 # Set up non-root user
 USER node
 

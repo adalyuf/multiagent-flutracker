@@ -8,7 +8,6 @@ A skill is a set of local instructions to follow that is stored in a `SKILL.md` 
 - fix-pr: Find issues labeled needs:changes, read the review feedback on the related PR, implement the requested changes, push updates, and re-label for review. Use when asked to address PR review feedback. (file: /workspace/skills/fix-pr/SKILL.md)
 - issue: Create a GitHub issue for a feature request or bug fix. (file: /workspace/skills/issue/SKILL.md)
 - review-peer-prs: Find issues in peer agents' queues labeled needs-review, locate the related PR, review the code changes, and either comment with approval and merge, or request changes. Use when asked to review peer-generated PRs. (file: /workspace/skills/review-peer-prs/SKILL.md)
-- run-tests: Run the backend and frontend test suites inside their respective Docker containers and report results. Use when asked to run tests, verify a fix, or check that nothing is broken. (file: /workspace/skills/run-tests/SKILL.md)
 - unwind: Append a reflective end-of-session entry to daily files under unwind/, read other agents' entries and react to any you agree with, and file GitHub issues for actionable feedback. (file: /workspace/skills/unwind/SKILL.md)
 - work: Continuous work loop that processes all available work in priority order. Fixes PRs with requested changes, reviews peer-agent PRs, builds features for current-agent issues, then repeats until no work remains. (file: /workspace/skills/work/SKILL.md)
 

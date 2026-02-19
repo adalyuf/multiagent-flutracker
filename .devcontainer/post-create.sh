@@ -11,7 +11,14 @@ sudo chown -R node:node \
 mkdir -p /home/node/.codex/skills
 mkdir -p /home/node/.gemini/skills
 
-for skill in build-feature fix-pr issue review-peer-prs run-tests unwind work; do
+# Install backend Python dependencies
+cd /workspace/backend && pip install -r requirements.txt
+
+# Install frontend dependencies and Playwright browsers
+cd /workspace/frontend && npm install && npx playwright install
+cd /workspace
+
+for skill in build-feature fix-pr issue review-peer-prs unwind work; do
   # Link for Codex (backward compatibility)
   rm -rf "/home/node/.codex/skills/${skill}"
   ln -s "/workspace/skills/${skill}" "/home/node/.codex/skills/${skill}"
