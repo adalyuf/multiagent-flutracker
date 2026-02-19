@@ -164,6 +164,7 @@ async def test_cases_historical_country_filter(client, db_session):
     assert len(data) == 1
     assert data[0]["cases"] == 10
 
+
 @pytest.mark.asyncio
 async def test_cases_subtypes_empty(client):
     resp = await client.get("/api/cases/subtypes")

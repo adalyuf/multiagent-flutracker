@@ -1,13 +1,16 @@
 from datetime import date
+
 from fastapi import APIRouter, Query
-from sqlalchemy import String, and_, case, cast, desc, func, select, text
+from sqlalchemy import String, and_, case, cast, desc, func, select
+
 from app.database import async_session
 from app.models import FluCase
 from app.population import get_population
-from app.schemas import CaseSummary, MapDataPoint, HistoricalPoint, SubtypePoint, CountryRow
+from app.schemas import CaseSummary, CountryRow, HistoricalPoint, MapDataPoint, SubtypePoint
 from app.utils import weeks_ago
 
 router = APIRouter()
+
 
 def _per_100k(cases: int, cc: str) -> float:
     pop = get_population(cc)
@@ -34,9 +37,9 @@ async def cases_summary():
 
         week_totals_r = await session.execute(
             select(
-                func.sum(
-                    case((FluCase.time >= current_cutoff, FluCase.new_cases), else_=0)
-                ).label("current_week_cases"),
+                func.sum(case((FluCase.time >= current_cutoff, FluCase.new_cases), else_=0)).label(
+                    "current_week_cases"
+                ),
                 func.sum(
                     case(
                         (
@@ -125,12 +128,14 @@ async def cases_historical(
         # Week offset from Oct 1
         season_start = date(season_year, 10, 1)
         week_offset = (d - season_start).days // 7
-        points.append(HistoricalPoint(
-            season=season,
-            week_offset=week_offset,
-            date=d.isoformat(),
-            cases=r.total,
-        ))
+        points.append(
+            HistoricalPoint(
+                season=season,
+                week_offset=week_offset,
+                date=d.isoformat(),
+                cases=r.total,
+            )
+        )
 
     return points
 
@@ -156,10 +161,7 @@ async def cases_subtypes():
             .order_by(FluCase.time)
         )
         result = await session.execute(q)
-        return [
-            SubtypePoint(date=r.time.isoformat(), subtype=r.flu_type, cases=r.total)
-            for r in result
-        ]
+        return [SubtypePoint(date=r.time.isoformat(), subtype=r.flu_type, cases=r.total) for r in result]
 
 
 @router.get("/cases/countries", response_model=list[CountryRow])
@@ -176,7 +178,6 @@ async def cases_countries(
             return []
 
         cutoff = weeks_ago(max_date, 4)
-        prior_cutoff = weeks_ago(max_date, 56)
 
         # Current period totals
         q = (
@@ -253,17 +254,19 @@ async def cases_countries(
         if search and search.lower() not in cc.lower():
             continue
 
-        rows.append(CountryRow(
-            rank=rank,
-            country_code=cc,
-            country_name=cc,
-            total_cases=total,
-            per_100k=per100k,
-            prior_year_cases=prior,
-            delta_pct=round(delta, 1),
-            dominant_type=dominant.get(cc, ""),
-            sparkline=sparklines.get(cc, []),
-            severity=round(severity, 3),
-        ))
+        rows.append(
+            CountryRow(
+                rank=rank,
+                country_code=cc,
+                country_name=cc,
+                total_cases=total,
+                per_100k=per100k,
+                prior_year_cases=prior,
+                delta_pct=round(delta, 1),
+                dominant_type=dominant.get(cc, ""),
+                sparkline=sparklines.get(cc, []),
+                severity=round(severity, 3),
+            )
+        )
 
     return rows[:50]

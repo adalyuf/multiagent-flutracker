@@ -8,6 +8,18 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/test/setup.js',
     include: ['src/__tests__/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary'],
+      include: ['src/**/*.{js,jsx}'],
+      exclude: ['src/test/**', 'src/__tests__/**'],
+      thresholds: {
+        lines: 80,
+        branches: 70,
+        functions: 70,
+        statements: 80,
+      },
+    },
   },
   server: {
     host: '0.0.0.0',

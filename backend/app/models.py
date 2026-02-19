@@ -5,10 +5,12 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Enum as SAEnum,
     Integer,
     String,
     UniqueConstraint,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.orm import DeclarativeBase
 
@@ -53,8 +55,7 @@ class FluCase(Base):
     iso_week = Column(Integer, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("country_code", "region", "city", "flu_type", "source", "time",
-                         name="uq_flu_case"),
+        UniqueConstraint("country_code", "region", "city", "flu_type", "source", "time", name="uq_flu_case"),
     )
 
 
@@ -68,10 +69,7 @@ class GenomicSequence(Base):
     collection_date = Column(Date, nullable=False)
     count = Column(Integer, nullable=False, default=1)
 
-    __table_args__ = (
-        UniqueConstraint("country_code", "clade", "lineage", "collection_date",
-                         name="uq_genomic_seq"),
-    )
+    __table_args__ = (UniqueConstraint("country_code", "clade", "lineage", "collection_date", name="uq_genomic_seq"),)
 
 
 class Anomaly(Base):

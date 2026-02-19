@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timedelta
-from sqlalchemy import select, func, delete, text
+
+from sqlalchemy import delete, func, select
+
 from app.database import async_session
 from app.models import Anomaly, AnomalyType, FluCase, Severity
 
@@ -30,10 +32,7 @@ async def detect_anomalies():
 
             # Recent totals per country
             recent_q = (
-                select(
-                    FluCase.country_code,
-                    func.sum(FluCase.new_cases).label("recent_total")
-                )
+                select(FluCase.country_code, func.sum(FluCase.new_cases).label("recent_total"))
                 .where(FluCase.time >= recent_cutoff)
                 .group_by(FluCase.country_code)
             )
@@ -46,7 +45,7 @@ async def detect_anomalies():
                     FluCase.country_code,
                     func.avg(FluCase.new_cases).label("avg_cases"),
                     func.stddev(FluCase.new_cases).label("std_cases"),
-                    func.count(FluCase.new_cases).label("n")
+                    func.count(FluCase.new_cases).label("n"),
                 )
                 .where(FluCase.time >= hist_cutoff, FluCase.time < recent_cutoff)
                 .group_by(FluCase.country_code)
@@ -70,14 +69,16 @@ async def detect_anomalies():
 
                 if zscore >= ZSCORE_THRESHOLD:
                     severity = Severity.HIGH if zscore >= 3.0 else Severity.MEDIUM
-                    anomalies.append(Anomaly(
-                        country_code=cc,
-                        country_name=cc,
-                        anomaly_type=AnomalyType.SPIKE,
-                        severity=severity,
-                        message=f"{cc}: cases {zscore:.1f}x std above mean ({int(weekly_avg)} vs avg {int(avg)})",
-                        detected_at=datetime.utcnow(),
-                    ))
+                    anomalies.append(
+                        Anomaly(
+                            country_code=cc,
+                            country_name=cc,
+                            anomaly_type=AnomalyType.SPIKE,
+                            severity=severity,
+                            message=f"{cc}: cases {zscore:.1f}x std above mean ({int(weekly_avg)} vs avg {int(avg)})",
+                            detected_at=datetime.utcnow(),
+                        )
+                    )
 
             if anomalies:
                 session.add_all(anomalies)

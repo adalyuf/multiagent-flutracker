@@ -6,5 +6,8 @@ dist/
 *.egg-info/
 .venv/
 .pytest_cache/
+.coverage
+htmlcov/
+frontend/coverage/
 .worktrees/
 *.db

@@ -54,10 +54,12 @@ class FakeSessionCtx:
 
 @pytest.mark.asyncio
 async def test_detect_anomalies_no_case_data(monkeypatch):
-    session = FakeSession([
-        ScalarResult(None),  # delete
-        ScalarResult(None),  # max date
-    ])
+    session = FakeSession(
+        [
+            ScalarResult(None),  # delete
+            ScalarResult(None),  # max date
+        ]
+    )
 
     monkeypatch.setattr(anomaly, "async_session", lambda: FakeSessionCtx(session))
 
@@ -70,17 +72,23 @@ async def test_detect_anomalies_no_case_data(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_detect_anomalies_creates_high_severity_spike(monkeypatch):
-    session = FakeSession([
-        ScalarResult(None),
-        ScalarResult(date(2025, 2, 1)),
-        IterResult([
-            SimpleNamespace(country_code="US", recent_total=400),
-            SimpleNamespace(country_code="GB", recent_total=200),
-        ]),
-        IterResult([
-            SimpleNamespace(country_code="US", avg_cases=50.0, std_cases=10.0, n=20),
-        ]),
-    ])
+    session = FakeSession(
+        [
+            ScalarResult(None),
+            ScalarResult(date(2025, 2, 1)),
+            IterResult(
+                [
+                    SimpleNamespace(country_code="US", recent_total=400),
+                    SimpleNamespace(country_code="GB", recent_total=200),
+                ]
+            ),
+            IterResult(
+                [
+                    SimpleNamespace(country_code="US", avg_cases=50.0, std_cases=10.0, n=20),
+                ]
+            ),
+        ]
+    )
 
     monkeypatch.setattr(anomaly, "async_session", lambda: FakeSessionCtx(session))
 

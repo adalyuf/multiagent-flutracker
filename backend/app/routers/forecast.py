@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query
+
 from app.services.forecast import generate_forecast
 
 router = APIRouter()

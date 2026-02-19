@@ -1,10 +1,12 @@
 import logging
 from datetime import timedelta
-from sqlalchemy import select, func
+
+import numpy as np
+from sqlalchemy import func, select
+
 from app.config import settings
 from app.database import async_session
 from app.models import FluCase
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +16,7 @@ async def generate_forecast(country_code: str = None, weeks_ahead: int = 8):
     try:
         async with async_session() as session:
             q = (
-                select(
-                    FluCase.time,
-                    func.sum(FluCase.new_cases).label("total")
-                )
+                select(FluCase.time, func.sum(FluCase.new_cases).label("total"))
                 .group_by(FluCase.time)
                 .order_by(FluCase.time)
             )
@@ -63,7 +62,7 @@ async def generate_forecast(country_code: str = None, weeks_ahead: int = 8):
         forecast = []
         for w in range(1, weeks_ahead + 1):
             fd = last_date + timedelta(weeks=w)
-            width = settings.FORECAST_CI_MULTIPLIER * std_residual * (w ** 0.5)
+            width = settings.FORECAST_CI_MULTIPLIER * std_residual * (w**0.5)
             point = {
                 "date": fd.isoformat(),
                 "actual": None,

@@ -1,11 +1,10 @@
 """Tests for FluNet service — pure functions only (no network calls)."""
 
-import pytest
 from datetime import date
 
 from app.services.flunet import (
-    _parse_week_date,
     _normalize_country,
+    _parse_week_date,
     _process_records,
 )
 

@@ -1,9 +1,11 @@
 from datetime import timedelta
+
 from fastapi import APIRouter, Query
-from sqlalchemy import select, func, desc, cast, String
+from sqlalchemy import desc, func, select
+
 from app.database import async_session
 from app.models import GenomicSequence
-from app.schemas import GenomicTrendPoint, GenomicSummary, GenomicCountryRow
+from app.schemas import GenomicCountryRow, GenomicSummary, GenomicTrendPoint
 
 router = APIRouter()
 
@@ -78,14 +80,10 @@ async def genomic_summary():
         total_r = await session.execute(select(func.sum(GenomicSequence.count)))
         total = total_r.scalar() or 0
 
-        countries_r = await session.execute(
-            select(func.count(func.distinct(GenomicSequence.country_code)))
-        )
+        countries_r = await session.execute(select(func.count(func.distinct(GenomicSequence.country_code))))
         countries = countries_r.scalar() or 0
 
-        clades_r = await session.execute(
-            select(func.count(func.distinct(GenomicSequence.clade)))
-        )
+        clades_r = await session.execute(select(func.count(func.distinct(GenomicSequence.clade))))
         clades = clades_r.scalar() or 0
 
         dom_r = await session.execute(

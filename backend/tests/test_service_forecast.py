@@ -1,10 +1,10 @@
 from datetime import date, timedelta
 
-import pytest
 import numpy as np
+import pytest
 
-from app.models import FluCase
 from app.config import settings
+from app.models import FluCase
 from app.services.forecast import generate_forecast
 
 
@@ -128,7 +128,7 @@ async def test_generate_forecast_uses_configurable_parameters(db_session):
         residuals.append(abs(v - smoothed_for_residuals))
 
     std_residual = float(np.std(residuals))
-    expected_width = 3.0 * std_residual * (1 ** 0.5)
+    expected_width = 3.0 * std_residual * (1**0.5)
 
     first = out["forecast"][0]
     assert first["forecast"] == round(smoothed, 1)

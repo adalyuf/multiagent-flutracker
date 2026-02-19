@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from app.services.nextstrain import NEXTSTRAIN_URL, normalize_country_code, _walk_tree
+from app.services.nextstrain import NEXTSTRAIN_URL, _walk_tree, normalize_country_code
 
 
 def test_nextstrain_dataset_uses_at_least_10_year_window():
@@ -11,38 +11,42 @@ def test_nextstrain_dataset_uses_at_least_10_year_window():
 
 # --- normalize_country_code tests ---
 
-@pytest.mark.parametrize("input_val,expected", [
-    ("United States", "US"),
-    ("USA", "US"),
-    ("UNITEDSTATES", "US"),
-    ("united kingdom", "GB"),
-    ("UK", "GB"),
-    ("England", "GB"),
-    ("Australia", "AU"),
-    ("Japan", "JP"),
-    ("South Korea", "KR"),
-    ("Czech Republic", "CZ"),
-    ("Czechia", "CZ"),
-    ("Niger", "NE"),
-    ("Togo", "TG"),
-    ("Cote D Ivoire", "CI"),
-    ("Guyana", "GY"),
-    ("South Sudan", "SS"),
-    ("Suriname", "SR"),
-    ("Maldives", "MV"),
-    ("Bhutan", "BT"),
-    ("Zambia", "ZM"),
-    ("East Timor", "TL"),
-    ("Mauritius", "MU"),
-    ("Paraguay", "PY"),
-    ("Cameroon", "CM"),
-    ("Uruguay", "UY"),
-    ("Burkina Faso", "BF"),
-    ("Saint Vincent And The Grenadines", "VC"),
-    ("Costa Rica", "CR"),
-    ("Venezuela", "VE"),
-    ("Bosnia Herzegovina", "BA"),
-])
+
+@pytest.mark.parametrize(
+    "input_val,expected",
+    [
+        ("United States", "US"),
+        ("USA", "US"),
+        ("UNITEDSTATES", "US"),
+        ("united kingdom", "GB"),
+        ("UK", "GB"),
+        ("England", "GB"),
+        ("Australia", "AU"),
+        ("Japan", "JP"),
+        ("South Korea", "KR"),
+        ("Czech Republic", "CZ"),
+        ("Czechia", "CZ"),
+        ("Niger", "NE"),
+        ("Togo", "TG"),
+        ("Cote D Ivoire", "CI"),
+        ("Guyana", "GY"),
+        ("South Sudan", "SS"),
+        ("Suriname", "SR"),
+        ("Maldives", "MV"),
+        ("Bhutan", "BT"),
+        ("Zambia", "ZM"),
+        ("East Timor", "TL"),
+        ("Mauritius", "MU"),
+        ("Paraguay", "PY"),
+        ("Cameroon", "CM"),
+        ("Uruguay", "UY"),
+        ("Burkina Faso", "BF"),
+        ("Saint Vincent And The Grenadines", "VC"),
+        ("Costa Rica", "CR"),
+        ("Venezuela", "VE"),
+        ("Bosnia Herzegovina", "BA"),
+    ],
+)
 def test_normalize_known_countries(input_val, expected):
     assert normalize_country_code(input_val) == expected
 
@@ -67,6 +71,7 @@ def test_normalize_strips_whitespace():
 
 
 # --- _walk_tree tests ---
+
 
 def test_walk_tree_collects_valid_nodes_recursively():
     tree = {

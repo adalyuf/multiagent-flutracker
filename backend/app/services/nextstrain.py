@@ -1,8 +1,9 @@
-import httpx
 import logging
 from datetime import datetime
-from sqlalchemy import select
+
+import httpx
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+
 from app.database import async_session
 from app.models import GenomicSequence
 
@@ -208,7 +209,6 @@ async def fetch_nextstrain():
         data = resp.json()
 
     tree = data.get("tree", {})
-    meta = data.get("meta", {})
 
     records = []
     _walk_tree(tree, records)
@@ -232,13 +232,15 @@ def _walk_tree(node: dict, records: list):
                 year = int(num_date)
                 frac = num_date - year
                 date_val = datetime(year, 1, 1) + __import__("datetime").timedelta(days=frac * 365.25)
-                records.append({
-                    "country_code": code,
-                    "clade": clade,
-                    "lineage": "",
-                    "collection_date": date_val.date(),
-                    "count": 1,
-                })
+                records.append(
+                    {
+                        "country_code": code,
+                        "clade": clade,
+                        "lineage": "",
+                        "collection_date": date_val.date(),
+                        "count": 1,
+                    }
+                )
         except (ValueError, TypeError):
             pass
 
@@ -255,7 +257,7 @@ async def ingest_nextstrain():
 
         async with async_session() as session:
             for i in range(0, len(records), 1000):
-                batch = records[i:i + 1000]
+                batch = records[i : i + 1000]
                 stmt = pg_insert(GenomicSequence).values(batch)
                 stmt = stmt.on_conflict_do_nothing(constraint="uq_genomic_seq")
                 await session.execute(stmt)

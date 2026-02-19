@@ -1,8 +1,10 @@
-import httpx
 import logging
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
+
+import httpx
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+
 from app.database import async_session
 from app.models import FluCase
 
@@ -48,10 +50,7 @@ async def fetch_flunet(weeks_back: int = 4):
     iso_year = cutoff.isocalendar()[0]
     iso_week = cutoff.isocalendar()[1]
 
-    url = (
-        f"{FLUNET_URL}?$filter=ISO_YEAR ge {iso_year} and ISO_WEEK ge {iso_week}"
-        f"&$top=120000"
-    )
+    url = f"{FLUNET_URL}?$filter=ISO_YEAR ge {iso_year} and ISO_WEEK ge {iso_week}" f"&$top=120000"
 
     records = []
     async with httpx.AsyncClient(timeout=120) as client:
@@ -77,10 +76,7 @@ async def fetch_flunet_full(years_back: int = FULL_BACKFILL_YEARS):
 
     async with httpx.AsyncClient(timeout=180) as client:
         for year in range(start_year, current_year + 1):
-            url = (
-                f"{FLUNET_URL}?$filter=ISO_YEAR ge {year} and ISO_YEAR lt {year + 1}"
-                f"&$top=50000"
-            )
+            url = f"{FLUNET_URL}?$filter=ISO_YEAR ge {year} and ISO_YEAR lt {year + 1}" f"&$top=50000"
             year_records = 0
             while url:
                 logger.info("Fetching FluNet backfill year %s: %s...", year, url[:120])
@@ -111,9 +107,7 @@ def _process_records(records: list) -> list[dict]:
         if not iso_year or not iso_week:
             continue
 
-        country_code = _normalize_country(
-            rec.get("ISO2") or rec.get("COUNTRY_CODE") or ""
-        )
+        country_code = _normalize_country(rec.get("ISO2") or rec.get("COUNTRY_CODE") or "")
         if not country_code:
             continue
 
@@ -127,24 +121,8 @@ def _process_records(records: list) -> list[dict]:
             val = rec.get(field)
             if val and int(val) > 0:
                 has_specific = True
-                parsed.append({
-                    "country_code": country_code,
-                    "region": "",
-                    "city": "",
-                    "flu_type": label,
-                    "source": "who_flunet",
-                    "time": time_val.date(),
-                    "new_cases": int(val),
-                    "iso_year": iso_year,
-                    "iso_week": iso_week,
-                })
-
-        if not has_specific:
-            for field, label in AGGREGATE_MAP.items():
-                val = rec.get(field)
-                if val and int(val) > 0:
-                    has_specific = True
-                    parsed.append({
+                parsed.append(
+                    {
                         "country_code": country_code,
                         "region": "",
                         "city": "",
@@ -154,23 +132,45 @@ def _process_records(records: list) -> list[dict]:
                         "new_cases": int(val),
                         "iso_year": iso_year,
                         "iso_week": iso_week,
-                    })
+                    }
+                )
+
+        if not has_specific:
+            for field, label in AGGREGATE_MAP.items():
+                val = rec.get(field)
+                if val and int(val) > 0:
+                    has_specific = True
+                    parsed.append(
+                        {
+                            "country_code": country_code,
+                            "region": "",
+                            "city": "",
+                            "flu_type": label,
+                            "source": "who_flunet",
+                            "time": time_val.date(),
+                            "new_cases": int(val),
+                            "iso_year": iso_year,
+                            "iso_week": iso_week,
+                        }
+                    )
 
         if not has_specific:
             for field in LAST_RESORT_FIELDS:
                 val = rec.get(field)
                 if val and int(val) > 0:
-                    parsed.append({
-                        "country_code": country_code,
-                        "region": "",
-                        "city": "",
-                        "flu_type": "unknown",
-                        "source": "who_flunet",
-                        "time": time_val.date(),
-                        "new_cases": int(val),
-                        "iso_year": iso_year,
-                        "iso_week": iso_week,
-                    })
+                    parsed.append(
+                        {
+                            "country_code": country_code,
+                            "region": "",
+                            "city": "",
+                            "flu_type": "unknown",
+                            "source": "who_flunet",
+                            "time": time_val.date(),
+                            "new_cases": int(val),
+                            "iso_year": iso_year,
+                            "iso_week": iso_week,
+                        }
+                    )
                     break
 
     # Aggregate duplicates (handles UK merging)
@@ -185,17 +185,19 @@ def _process_records(records: list) -> list[dict]:
     for key, total in agg.items():
         time_val, cc, region, city, flu_type, source = key
         iy, iw = meta[key]
-        result.append({
-            "country_code": cc,
-            "region": region,
-            "city": city,
-            "flu_type": flu_type,
-            "source": source,
-            "time": time_val,
-            "new_cases": total,
-            "iso_year": iy,
-            "iso_week": iw,
-        })
+        result.append(
+            {
+                "country_code": cc,
+                "region": region,
+                "city": city,
+                "flu_type": flu_type,
+                "source": source,
+                "time": time_val,
+                "new_cases": total,
+                "iso_year": iy,
+                "iso_week": iw,
+            }
+        )
 
     return result
 
@@ -230,8 +232,7 @@ async def _upsert_records(records: list[dict]):
         deduped_records = []
         seen = set()
         for r in records:
-            key = (r["country_code"], r["region"], r["city"],
-                   r["flu_type"], r["source"], r["time"])
+            key = (r["country_code"], r["region"], r["city"], r["flu_type"], r["source"], r["time"])
             if key not in seen:
                 seen.add(key)
                 deduped_records.append(r)
@@ -239,11 +240,9 @@ async def _upsert_records(records: list[dict]):
         if deduped_records:
             # Batch insert
             for i in range(0, len(deduped_records), 1000):
-                batch = deduped_records[i:i + 1000]
+                batch = deduped_records[i : i + 1000]
                 stmt = pg_insert(FluCase).values(batch)
-                stmt = stmt.on_conflict_do_nothing(
-                    constraint="uq_flu_case"
-                )
+                stmt = stmt.on_conflict_do_nothing(constraint="uq_flu_case")
                 await session.execute(stmt)
             await session.commit()
             logger.info(f"Upserted {len(deduped_records)} FluNet records")

@@ -3,12 +3,12 @@
 from datetime import datetime
 
 from app.schemas import (
-    CaseSummary,
-    MapDataPoint,
-    CountryRow,
     AnomalyOut,
+    CaseSummary,
+    CountryRow,
     ForecastPoint,
     GenomicSummary,
+    MapDataPoint,
 )
 
 
@@ -31,9 +31,13 @@ def test_country_row_sparkline():
 
 def test_anomaly_out():
     a = AnomalyOut(
-        id=1, country_code="US", country_name="United States",
-        anomaly_type="spike", severity="high",
-        message="test", detected_at=datetime(2025, 6, 1),
+        id=1,
+        country_code="US",
+        country_name="United States",
+        anomaly_type="spike",
+        severity="high",
+        message="test",
+        detected_at=datetime(2025, 6, 1),
     )
     assert a.severity == "high"
 

@@ -1,12 +1,14 @@
 import asyncio
 import logging
 from datetime import date
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import delete, func, select
+
 from app.database import async_session, engine
-from app.models import FluCase, GenomicSequence, Anomaly, Base
+from app.models import Anomaly, Base, FluCase, GenomicSequence
 
 logger = logging.getLogger(__name__)
 
@@ -18,20 +20,22 @@ STARTUP_BACKFILL_RETRY_SECONDS = 15
 
 async def _run_who_flunet():
     from app.services.flunet import ingest_flunet
+
     logger.info("Running WHO FluNet ingestion (last 4 weeks)")
     await ingest_flunet(weeks_back=4)
 
 
 async def _run_anomaly_detection():
     from app.services.anomaly import detect_anomalies
+
     logger.info("Running anomaly detection")
     await detect_anomalies()
 
 
 async def _run_full_rebuild():
+    from app.services.anomaly import detect_anomalies
     from app.services.flunet import ingest_flunet_full
     from app.services.nextstrain import ingest_nextstrain
-    from app.services.anomaly import detect_anomalies
 
     logger.info("Running full daily rebuild")
     async with async_session() as session:

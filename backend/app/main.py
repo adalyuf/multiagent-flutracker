@@ -1,13 +1,15 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
-from app.scheduler import create_scheduler, init_db, run_startup_jobs, get_backfill_status
+
+from app.scheduler import create_scheduler, get_backfill_status, init_db, run_startup_jobs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -42,8 +44,9 @@ app.add_middleware(
 )
 app.add_middleware(SlowAPIMiddleware)
 
-# Import and include routers
-from app.routers import cases, genomics, anomalies, forecast as forecast_router
+# Import and include routers (after app creation so routers can reference `app`)
+from app.routers import anomalies, cases, genomics  # noqa: E402
+from app.routers import forecast as forecast_router  # noqa: E402
 
 app.include_router(cases.router, prefix="/api")
 app.include_router(genomics.router, prefix="/api/genomics")
