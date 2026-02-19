@@ -4,11 +4,13 @@
  */
 export function parseSeason(dateStr) {
   const d = new Date(dateStr)
-  const year = d.getFullYear()
-  const month = d.getMonth() // 0-indexed
+  const year = d.getUTCFullYear()
+  const month = d.getUTCMonth() // 0-indexed
+  const day = d.getUTCDate()
   const seasonYear = month >= 9 ? year : year - 1 // Oct = month 9
-  const seasonStart = new Date(seasonYear, 9, 1) // Oct 1
-  const weekOffset = Math.floor((d - seasonStart) / (7 * 86400000))
+  const seasonStartMs = Date.UTC(seasonYear, 9, 1) // Oct 1
+  const dateMs = Date.UTC(year, month, day)
+  const weekOffset = Math.floor((dateMs - seasonStartMs) / (7 * 86400000))
   return {
     season: `${seasonYear}/${seasonYear + 1}`,
     weekOffset,
