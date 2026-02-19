@@ -11,15 +11,12 @@ sudo chown -R node:node \
 mkdir -p /home/node/.codex/skills
 mkdir -p /home/node/.gemini/skills
 
-# Install backend Python dependencies
-cd /workspace/backend && pip install -r requirements.txt
-
-# Install pre-commit and set up git hooks
-pip install pre-commit
+# Set up pre-commit git hooks (packages already installed in image)
 cd /workspace && pre-commit install
 
-# Install frontend dependencies and Playwright browsers
-cd /workspace/frontend && npm install && npx playwright install
+# Copy pre-installed node_modules from image, then verify deps are current
+cp -a /opt/frontend-deps/node_modules /workspace/frontend/node_modules 2>/dev/null || true
+cd /workspace/frontend && npm install
 cd /workspace
 
 for skill in build-feature fix-pr issue review-peer-prs unwind work; do

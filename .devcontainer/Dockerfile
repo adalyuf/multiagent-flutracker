@@ -1,6 +1,21 @@
+FROM python:3.12-slim-bookworm AS python-base
+
 FROM node:20 AS ai-devcontainer
 
 ARG CLAUDE_CODE_VERSION=latest
+
+# Copy Python 3.12 from official image (before apt installs that might pull system python)
+COPY --from=python-base /usr/local/bin/python3.12 /usr/local/bin/python3.12
+COPY --from=python-base /usr/local/bin/pip3.12 /usr/local/bin/pip3.12
+COPY --from=python-base /usr/local/lib/python3.12/ /usr/local/lib/python3.12/
+COPY --from=python-base /usr/local/lib/libpython3.12.so.1.0 /usr/local/lib/libpython3.12.so.1.0
+RUN ln -sf python3.12 /usr/local/bin/python3 && \
+  ln -sf python3 /usr/local/bin/python && \
+  ln -sf pip3.12 /usr/local/bin/pip3 && \
+  ln -sf pip3 /usr/local/bin/pip && \
+  ln -sf libpython3.12.so.1.0 /usr/local/lib/libpython3.12.so && \
+  ln -sf libpython3.12.so.1.0 /usr/local/lib/libpython3.so && \
+  ldconfig
 
 # Use the official GitHub CLI apt repo to avoid outdated distro-pinned gh builds.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -82,6 +97,10 @@ RUN ARCH=$(dpkg --print-architecture) && \
 # Install Playwright system dependencies (needs root for apt-get)
 RUN npx -y playwright install-deps
 
+# Pre-install Python dependencies (as root, into system site-packages)
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt pre-commit && rm /tmp/requirements.txt
+
 # Set up non-root user
 USER node
 
@@ -118,3 +137,7 @@ RUN npm install -g @google/gemini-cli
 # Opencode hits a lot of rate limits, kilocode seems like a fork of opencode and so far has had faster and more reliable API access
 RUN npm install -g opencode-ai
 RUN npm install -g @kilocode/cli
+
+# Pre-install frontend dependencies (staged for fast copy into bind-mounted workspace)
+COPY --chown=node:node frontend/package.json frontend/package-lock.json /opt/frontend-deps/
+RUN cd /opt/frontend-deps && npm ci && npx playwright install
