@@ -64,8 +64,8 @@ ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
 # Create workspace and config directories and set permissions
-RUN mkdir -p /workspace /home/node/.claude /home/node/.config/gh /home/node/.codex /home/node/.railway && \
-  chown -R node:node /workspace /home/node/.claude /home/node/.config /home/node/.codex /home/node/.railway
+RUN mkdir -p /workspace /home/node/.claude /home/node/.config/gh /home/node/.codex /home/node/.railway /home/node/.gemini && \
+  chown -R node:node /workspace /home/node/.claude /home/node/.config /home/node/.codex /home/node/.railway /home/node/.gemini
 
 # Allow node user passwordless sudo (needed for postCreateCommand to fix volume mount ownership)
 RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/node && \
@@ -108,3 +108,4 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 RUN npm i -g @openai/codex
 RUN npm install -g cline
 RUN npm install -g @railway/cli
+RUN npm install -g @google/gemini-cli

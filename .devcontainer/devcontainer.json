@@ -36,7 +36,8 @@
     "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume",
     "source=claude-code-ghconfig-${devcontainerId},target=/home/node/.config/gh,type=volume",
     "source=claude-code-codexconfig-${devcontainerId},target=/home/node/.codex,type=volume",
-    "source=claude-code-railwayconfig-${devcontainerId},target=/home/node/.railway,type=volume"
+    "source=claude-code-railwayconfig-${devcontainerId},target=/home/node/.railway,type=volume",
+    "source=claude-code-geminiconfig-${devcontainerId},target=/home/node/.gemini,type=volume"
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
