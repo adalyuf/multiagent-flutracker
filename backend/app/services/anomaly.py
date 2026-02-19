@@ -61,7 +61,7 @@ async def detect_anomalies():
             for cc, recent_total in recent_data.items():
                 if cc not in hist_data:
                     continue
-                avg, std = hist_data[cc]
+                avg, std = float(hist_data[cc][0]), float(hist_data[cc][1])
                 if std == 0:
                     continue
                 # Weekly average for recent period
