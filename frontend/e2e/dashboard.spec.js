@@ -160,11 +160,12 @@ test('country filtering updates dashboard data requests and selected country lab
 
   await page.goto('/')
 
-  await expect(page.getByText('Historical Season Comparison (Global)')).toBeVisible()
+  await expect(page.getByText('Season Comparison')).toBeVisible()
+  await expect(page.getByText('(Global)')).toBeVisible()
 
   await page.getByRole('cell', { name: 'GB' }).first().click()
 
-  await expect(page.getByText('Historical Season Comparison (GB)')).toBeVisible()
+  await expect(page.getByText('(GB)')).toBeVisible()
 
   await expect.poll(() => requestLog.some((p) => p.includes('/cases/historical?country=GB'))).toBeTruthy()
   await expect.poll(() => requestLog.some((p) => p.includes('/forecast?country=GB'))).toBeTruthy()
