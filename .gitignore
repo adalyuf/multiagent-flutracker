@@ -12,3 +12,4 @@ frontend/coverage/
 .worktrees/
 *.db
 .ruff_cache/
+.last-run.json
