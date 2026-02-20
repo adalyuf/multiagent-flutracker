@@ -83,7 +83,7 @@ describe('CladeTrends', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('link', { name: /view genomics dashboard/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /genomics/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /clade trends over time/i })).toBeInTheDocument()
 
     await waitFor(() => {

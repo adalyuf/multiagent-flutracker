@@ -27,8 +27,8 @@ export default function ChoroplethMap({ data, selectedCountry = '', onSelectCoun
     const dataMap = {}
     data.forEach(d => { dataMap[d.country_code] = d.per_100k })
 
-    const width = 800
-    const height = 400
+    const width = 700
+    const height = 320
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
     svg.attr('viewBox', `0 0 ${width} ${height}`)
@@ -40,8 +40,8 @@ export default function ChoroplethMap({ data, selectedCountry = '', onSelectCoun
     svg.append('path')
       .datum({ type: 'Sphere' })
       .attr('d', path)
-      .attr('fill', '#0a0c14')
-      .attr('stroke', '#252a3a')
+      .attr('fill', '#080a14')
+      .attr('stroke', '#1a1e30')
 
     getWorldMap(WORLD_URL)
       .then(world => {
@@ -54,12 +54,12 @@ export default function ChoroplethMap({ data, selectedCountry = '', onSelectCoun
           .attr('fill', d => {
             const iso = numericToIso(+d.id)
             const val = iso ? dataMap[iso] : null
-            return val != null ? mapColorScale(val) : '#181c28'
+            return val != null ? mapColorScale(val) : '#151828'
           })
           .attr('cursor', d => (numericToIso(+d.id) ? 'pointer' : 'default'))
           .attr('stroke', d => {
             const iso = numericToIso(+d.id)
-            return iso && iso === selectedCountry ? '#22d3ee' : '#252a3a'
+            return iso && iso === selectedCountry ? '#22d3ee' : '#1a1e30'
           })
           .attr('stroke-width', d => {
             const iso = numericToIso(+d.id)
@@ -81,28 +81,50 @@ export default function ChoroplethMap({ data, selectedCountry = '', onSelectCoun
   }, [data, selectedCountry, onSelectCountry])
 
   if (!data) {
-    return <SkeletonChart height={300} />
+    return <SkeletonChart height={220} />
   }
 
   return (
-    <div className="card fade-in-up" style={{ padding: 12 }}>
-      <h3 style={{
-        fontSize: '0.82rem',
-        color: 'var(--text-secondary)',
-        marginBottom: 8,
-        fontWeight: 600,
+    <div className="card-analytics fade-in-up" style={{ padding: 10 }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 6,
       }}>
-        Global Cases <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(per 100k, last 4 weeks)</span>
-      </h3>
+        <h3 style={{
+          fontSize: '0.75rem',
+          color: 'var(--text-primary)',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Global Cases
+          <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.65rem' }}>(per 100k, last 4 wk)</span>
+        </h3>
+      </div>
       <svg ref={svgRef} style={{ width: '100%', height: 'auto' }} role="img" aria-label="World choropleth map of flu cases per 100k people" />
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4 }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '0.55rem',
+        color: 'var(--text-dim)',
+        marginTop: 4,
+        padding: '0 2px',
+      }}>
         <span className="mono">0</span>
         <div style={{
           flex: 1,
-          height: 6,
-          margin: '0 8px',
+          height: 4,
+          margin: '0 6px',
           background: 'linear-gradient(to right, #ffffcc, #fd8d3c, #e31a1c, #800026)',
-          borderRadius: 3,
+          borderRadius: 2,
+          opacity: 0.85,
         }} />
         <span className="mono">40+</span>
       </div>

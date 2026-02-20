@@ -73,6 +73,6 @@ describe('HistoricalChart', () => {
     const { getByText } = render(
       <HistoricalChart data={historicalData} forecast={gaussianForecast} />,
     )
-    expect(getByText(/Gaussian baseline mu 87.4 sigma 9.2/i)).toBeInTheDocument()
+    expect(getByText(/\u03BC\s*87\.4\s*\u03C3\s*9\.2/)).toBeInTheDocument()
   })
 })

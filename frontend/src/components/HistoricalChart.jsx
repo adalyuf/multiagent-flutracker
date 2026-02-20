@@ -12,9 +12,9 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
   useEffect(() => {
     if (!data || data.length === 0) return
 
-    const width = 700
-    const height = 300
-    const margin = { top: 20, right: 120, bottom: 40, left: 60 }
+    const width = 560
+    const height = 240
+    const margin = { top: 16, right: 90, bottom: 32, left: 48 }
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
@@ -58,15 +58,15 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
     // Axes
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(12).tickFormat(d => `W${d}`))
-      .style('color', '#4a4f62')
-      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.6rem')
+      .call(d3.axisBottom(x).ticks(10).tickFormat(d => `W${d}`))
+      .style('color', '#636a88')
+      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.52rem')
 
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.2s')))
-      .style('color', '#4a4f62')
-      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.6rem')
+      .call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('.2s')))
+      .style('color', '#636a88')
+      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.52rem')
 
     const line = d3.line()
       .x(d => x(d.week_offset))
@@ -91,10 +91,10 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
 
       // Legend
       svg.append('text')
-        .attr('x', width - margin.right + 8)
-        .attr('y', margin.top + i * 16)
+        .attr('x', width - margin.right + 6)
+        .attr('y', margin.top + i * 12)
         .attr('fill', seasonColors(season))
-        .style('font-size', '0.6rem')
+        .style('font-size', '0.48rem')
         .style('font-family', 'var(--font-mono)')
         .attr('opacity', isCurrent ? 1 : 0.6)
         .text(season)
@@ -132,21 +132,21 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
           .attr('stroke-dasharray', '6,3')
 
         // Forecast legend entry
-        const legendY = margin.top + seasons.length * 16
+        const legendY = margin.top + seasons.length * 12
         svg.append('line')
-          .attr('x1', width - margin.right + 8)
-          .attr('x2', width - margin.right + 22)
-          .attr('y1', legendY + 4)
-          .attr('y2', legendY + 4)
+          .attr('x1', width - margin.right + 6)
+          .attr('x2', width - margin.right + 16)
+          .attr('y1', legendY + 3)
+          .attr('y2', legendY + 3)
           .attr('stroke', '#f59e0b')
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '4,2')
+          .attr('stroke-width', 1.5)
+          .attr('stroke-dasharray', '3,2')
 
         svg.append('text')
-          .attr('x', width - margin.right + 26)
-          .attr('y', legendY + 8)
+          .attr('x', width - margin.right + 20)
+          .attr('y', legendY + 6)
           .attr('fill', '#f59e0b')
-          .style('font-size', '0.6rem')
+          .style('font-size', '0.48rem')
           .style('font-family', 'var(--font-mono)')
           .text('Forecast')
       }
@@ -178,40 +178,41 @@ export default function HistoricalChart({ data, country = '', forecast = null, f
   }, [data, forecast])
 
   if (!data) {
-    return <SkeletonChart height={260} />
+    return <SkeletonChart height={180} />
   }
 
   return (
-    <div className="card fade-in-up stagger-1" style={{ padding: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+    <div className="card-analytics fade-in-up stagger-1" style={{ padding: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
         <h3 style={{
-          fontSize: '0.82rem',
-          color: 'var(--text-secondary)',
+          fontSize: '0.75rem',
+          color: 'var(--text-primary)',
           margin: 0,
           fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}>
-          Historical Season Comparison
-          <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
-            {country ? ` (${country})` : ' (Global)'}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          Season Comparison
+          <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.65rem' }}>
+            {country ? `(${country})` : '(Global)'}
           </span>
         </h3>
         {forecastUnavailable && (
-          <span style={{
-            fontSize: '0.65rem',
-            color: 'var(--text-muted)',
-            fontStyle: 'italic',
-            fontFamily: 'var(--font-mono)',
-          }}>
+          <span className="badge badge-muted" style={{ fontSize: '0.62rem' }}>
             forecast unavailable
           </span>
         )}
         {hasGaussianBaseline && (
           <span style={{
-            fontSize: '0.65rem',
-            color: 'var(--text-muted)',
+            fontSize: '0.62rem',
+            color: 'var(--text-dim)',
             fontFamily: 'var(--font-mono)',
           }}>
-            Gaussian baseline mu {gaussianBaseline.gaussian_mean.toFixed(1)} sigma {gaussianBaseline.gaussian_stddev.toFixed(1)}
+            {`\u03BC ${gaussianBaseline.gaussian_mean.toFixed(1)} \u03C3 ${gaussianBaseline.gaussian_stddev.toFixed(1)}`}
           </span>
         )}
       </div>

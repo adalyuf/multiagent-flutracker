@@ -17,15 +17,16 @@ export default function StackedAreaChart({
   title,
   headerAction = null,
   ariaLabel = '',
+  icon = null,
 }) {
   const svgRef = useRef()
 
   useEffect(() => {
     if (!data || data.length === 0 || !keys || keys.length === 0) return
 
-    const width = 500
-    const height = 280
-    const margin = { top: 20, right: 120, bottom: 40, left: 60 }
+    const width = 440
+    const height = 200
+    const margin = { top: 12, right: 10, bottom: 32, left: 48 }
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
@@ -62,15 +63,15 @@ export default function StackedAreaChart({
 
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(6))
-      .style('color', '#4a4f62')
-      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.55rem')
+      .call(d3.axisBottom(x).ticks(5))
+      .style('color', '#636a88')
+      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.5rem')
 
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.2s')))
-      .style('color', '#4a4f62')
-      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.55rem')
+      .call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('.2s')))
+      .style('color', '#636a88')
+      .selectAll('text').style('font-family', 'var(--font-mono)').style('font-size', '0.5rem')
 
     const area = d3.area()
       .x((_, i) => x(matrix[i].date))
@@ -85,37 +86,24 @@ export default function StackedAreaChart({
       .attr('d', area)
       .attr('fill', (d) => resolveColor(colorScale, d.key))
       .attr('opacity', 0.8)
-
-    keys.forEach((key, i) => {
-      svg.append('rect')
-        .attr('x', width - margin.right + 8)
-        .attr('y', margin.top + i * 18)
-        .attr('width', 10)
-        .attr('height', 10)
-        .attr('rx', 2)
-        .attr('fill', resolveColor(colorScale, key))
-      svg.append('text')
-        .attr('x', width - margin.right + 22)
-        .attr('y', margin.top + i * 18 + 9)
-        .attr('fill', '#8b90a5')
-        .style('font-size', '0.55rem')
-        .style('font-family', 'var(--font-display)')
-        .text(key)
-    })
   }, [colorScale, data, keys, seriesAccessor, xAccessor, yAccessor])
 
   if (!data || data.length === 0) {
-    return <SkeletonChart height={240} />
+    return <SkeletonChart height={160} />
   }
 
   return (
-    <div className="card fade-in-up" style={{ padding: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+    <div className="card-analytics fade-in-up" style={{ padding: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <h3 style={{
-          fontSize: '0.82rem',
-          color: 'var(--text-secondary)',
+          fontSize: '0.75rem',
+          color: 'var(--text-primary)',
           fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}>
+          {icon}
           {title}
         </h3>
         {headerAction}
@@ -126,6 +114,36 @@ export default function StackedAreaChart({
         role="img"
         aria-label={ariaLabel || title}
       />
+      {/* HTML legend — flush right */}
+      {keys && keys.length > 0 && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+          gap: '4px 10px',
+          marginTop: 6,
+        }}>
+          {keys.map((key) => (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{
+                width: 8,
+                height: 8,
+                borderRadius: 2,
+                background: resolveColor(colorScale, key),
+                flexShrink: 0,
+              }} />
+              <span style={{
+                fontSize: '0.52rem',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-display)',
+                whiteSpace: 'nowrap',
+              }}>
+                {key}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

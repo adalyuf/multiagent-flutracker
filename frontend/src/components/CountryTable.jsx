@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { severityColor } from '../utils/colors'
 
-function Sparkline({ data, width = 80, height = 20 }) {
+function Sparkline({ data, width = 80, height = 22 }) {
   if (!data || data.length < 2) return null
   const max = Math.max(...data, 1)
   const points = data.map((v, i) =>
@@ -10,34 +10,70 @@ function Sparkline({ data, width = 80, height = 20 }) {
 
   return (
     <svg width={width} height={height} role="img" aria-label="Weekly country trend sparkline">
-      <polyline points={points} fill="none" stroke="#22d3ee" strokeWidth="1.5" opacity="0.8" />
+      <defs>
+        <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline
+        points={points}
+        fill="none"
+        stroke="#22d3ee"
+        strokeWidth="1.5"
+        opacity="0.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
 
 function SeverityMeter({ value }) {
+  const color = severityColor(value)
   return (
-    <div style={{
-      width: 60,
-      height: 6,
-      background: 'var(--bg-elevated)',
-      borderRadius: 3,
-      overflow: 'hidden',
-    }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{
-        width: `${value * 100}%`,
-        height: '100%',
-        background: severityColor(value),
+        width: 56,
+        height: 5,
+        background: 'rgba(255,255,255,0.04)',
         borderRadius: 3,
-        transition: 'width 0.3s ease',
-      }} />
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${value * 100}%`,
+          height: '100%',
+          background: color,
+          borderRadius: 3,
+          transition: 'width 0.3s ease',
+          boxShadow: `0 0 6px ${color}40`,
+        }} />
+      </div>
+      <span className="mono" style={{ fontSize: '0.62rem', color: 'var(--text-dim)', minWidth: 24 }}>
+        {(value * 100).toFixed(0)}
+      </span>
     </div>
   )
 }
 
 function SortArrow({ field, sortField, sortDir }) {
-  if (field !== sortField) return <span style={{ opacity: 0.3, marginLeft: 4 }}>{'\u2195'}</span>
-  return <span style={{ marginLeft: 4, color: 'var(--accent-cyan)' }}>{sortDir === -1 ? '\u25BC' : '\u25B2'}</span>
+  if (field !== sortField) return <span style={{ opacity: 0.25, marginLeft: 4, fontSize: '0.6rem' }}>{'\u2195'}</span>
+  return <span style={{ marginLeft: 4, color: 'var(--accent-cyan)', fontSize: '0.6rem' }}>{sortDir === -1 ? '\u25BC' : '\u25B2'}</span>
+}
+
+function DeltaBadge({ value }) {
+  if (value == null) return null
+  const up = value >= 0
+  return (
+    <span className="badge mono" style={{
+      background: up ? 'var(--danger-glow)' : 'var(--success-glow)',
+      color: up ? 'var(--danger)' : 'var(--success)',
+      fontSize: '0.66rem',
+      padding: '1px 6px',
+    }}>
+      {up ? '\u25B2' : '\u25BC'} {Math.abs(value).toFixed(1)}%
+    </span>
+  )
 }
 
 export default function CountryTable({ data, selectedCountry = '', onSelectCountry = () => {} }) {
@@ -64,58 +100,65 @@ export default function CountryTable({ data, selectedCountry = '', onSelectCount
   const thClass = (field) => sortField === field ? 'sorted' : ''
 
   return (
-    <div className="card fade-in-up stagger-3">
+    <div className="card-analytics fade-in-up stagger-5">
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 14,
+        marginBottom: 16,
         flexWrap: 'wrap',
-        gap: 8,
+        gap: 10,
       }}>
-        <h3 style={{
-          fontSize: '0.82rem',
-          color: 'var(--text-secondary)',
-          fontWeight: 600,
-        }}>
-          Country Dashboard
-        </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label htmlFor="country-search" style={{
-            fontSize: '0.7rem',
-            color: 'var(--text-muted)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h3 style={{
+            fontSize: '0.85rem',
+            color: 'var(--text-primary)',
             fontWeight: 600,
           }}>
-            Search
-          </label>
-          <input
-            id="country-search"
-            style={{
-              background: 'var(--bg-elevated)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-default)',
-              borderRadius: 6,
-              padding: '6px 12px',
-              fontSize: '0.78rem',
-              fontFamily: 'var(--font-display)',
-              outline: 'none',
-              transition: 'border-color 0.15s ease',
-            }}
-            placeholder="Search countries..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onFocus={e => e.target.style.borderColor = 'var(--accent-cyan-dim)'}
-            onBlur={e => e.target.style.borderColor = 'var(--border-default)'}
-          />
+            Country Dashboard
+          </h3>
+          <span className="badge badge-muted">{sorted.length} results</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ position: 'relative' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              id="country-search"
+              aria-label="Search countries"
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
+                borderRadius: 8,
+                padding: '7px 12px 7px 32px',
+                fontSize: '0.76rem',
+                fontFamily: 'var(--font-display)',
+                outline: 'none',
+                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                width: 200,
+              }}
+              placeholder="Search countries..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onFocus={e => {
+                e.target.style.borderColor = 'var(--accent-cyan-dim)'
+                e.target.style.boxShadow = '0 0 0 3px var(--accent-cyan-glow)'
+              }}
+              onBlur={e => {
+                e.target.style.borderColor = 'var(--border-default)'
+                e.target.style.boxShadow = 'none'
+              }}
+            />
+          </div>
         </div>
       </div>
-      <div style={{ overflowX: 'auto', maxHeight: 420 }}>
+      <div style={{ overflowX: 'auto', maxHeight: 440, borderRadius: 8 }}>
         <table className="data-table">
           <thead>
             <tr>
-              <th>#</th>
+              <th style={{ width: 36 }}>#</th>
               <th className={thClass('country_code')} onClick={() => toggleSort('country_code')}>
                 Country<SortArrow field="country_code" sortField={sortField} sortDir={sortDir} />
               </th>
@@ -126,11 +169,11 @@ export default function CountryTable({ data, selectedCountry = '', onSelectCount
                 Per 100k<SortArrow field="per_100k" sortField={sortField} sortDir={sortDir} />
               </th>
               <th className={thClass('delta_pct')} onClick={() => toggleSort('delta_pct')}>
-                {'\u0394'} Prior Year<SortArrow field="delta_pct" sortField={sortField} sortDir={sortDir} />
+                {'\u0394'} YoY<SortArrow field="delta_pct" sortField={sortField} sortDir={sortDir} />
               </th>
-              <th>Sparkline</th>
+              <th>Trend</th>
               <th>Severity</th>
-              <th>Dominant Type</th>
+              <th>Dominant</th>
             </tr>
           </thead>
           <tbody>
@@ -142,18 +185,27 @@ export default function CountryTable({ data, selectedCountry = '', onSelectCount
                   className={isSelected ? 'selected' : ''}
                   onClick={() => onSelectCountry(isSelected ? '' : r.country_code)}
                 >
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{i + 1}</td>
+                  <td style={{ color: 'var(--text-dim)', fontSize: '0.68rem' }}>{i + 1}</td>
                   <td>
-                    <span style={{ fontWeight: 500 }}>{r.country_code}</span>
+                    <span style={{ fontWeight: 600, letterSpacing: '0.02em' }}>{r.country_code}</span>
                   </td>
-                  <td className="mono">{r.total_cases?.toLocaleString()}</td>
+                  <td className="mono" style={{ fontWeight: 500 }}>{r.total_cases?.toLocaleString()}</td>
                   <td className="mono">{r.per_100k?.toFixed(1)}</td>
-                  <td style={{ color: r.delta_pct >= 0 ? 'var(--danger)' : 'var(--success)' }}>
-                    <span className="mono">{r.delta_pct >= 0 ? '+' : ''}{r.delta_pct?.toFixed(1)}%</span>
-                  </td>
+                  <td><DeltaBadge value={r.delta_pct} /></td>
                   <td><Sparkline data={r.sparkline} /></td>
                   <td><SeverityMeter value={r.severity || 0} /></td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{r.dominant_type}</td>
+                  <td>
+                    <span style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.72rem',
+                      fontWeight: 500,
+                      padding: '2px 6px',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderRadius: 4,
+                    }}>
+                      {r.dominant_type}
+                    </span>
+                  </td>
                 </tr>
               )
             })}
