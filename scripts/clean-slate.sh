@@ -48,6 +48,23 @@ echo ""
 echo "Starting clean slate..."
 echo ""
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Phase 0: Reset Docker volumes
+# ══════════════════════════════════════════════════════════════════════════════
+echo "Phase 0: Resetting Docker volumes..."
+
+# Postgres only creates the POSTGRES_USER role on first boot with an empty data
+# directory.  If the pgdata volume was initialised with different credentials,
+# the new .env values are silently ignored and the backend cannot authenticate.
+# Tearing down with -v removes the named volume so Postgres re-initialises
+# cleanly on the next `docker compose up`.
+if command -v docker &>/dev/null; then
+  docker compose -f "$REPO_ROOT/docker-compose.yml" down -v 2>/dev/null || true
+fi
+
+echo "  Done."
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Phase 1: Delete FluTracker files
 # ══════════════════════════════════════════════════════════════════════════════
